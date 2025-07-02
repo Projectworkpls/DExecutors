@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - DExecutors{% endblock %}
+
+{% block content %}
+<div class="auth-outer">
+    <div class="auth-card">
+        <h2 class="auth-title">{% block formtitle %}Create Your Account{% endblock %}</h2>
+        <p class="auth-desc">{% block formdesc %}Sign up to join DExecutors{% endblock %}</p>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" required placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" required placeholder="Choose a username">
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required placeholder="Create a password">
+            </div>
+            
+            <button type="submit" class="btn btn-glow">Register</button>
+        </form>
+        
+        <div class="auth-links">
+            <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main-container landing-bg">
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <span class="hero-icon">🌟</span>
+            <h1 class="hero-title">Regretful Ideas Brought to Life</h1>
+            <p class="hero-desc">
+                Teens, pick an idea and show your talent! Parents,
+                <a href="{{ url_for('auth.login') }}">log in</a> to submit your dream project.
+            </p>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary hero-btn">Submit Your Idea</a>
+        </div>
+        <div class="ideas-list">
+            {% if projects %}
+                <div class="projects-grid">
+                    {% for project in projects %}
+                        <div class="project-card">
+                            <h3>{{ project.title }}</h3>
+                            <p>{{ project.description[:120] }}{% if project.description|length > 120 %}...{% endif %}</p>
+                            <div class="project-meta">
+                                <span>₹{{ project.budget }}</span>
+                                <span>{{ project.deadline }}</span>
+                            </div>
+                            <a href="{{ url_for('projects.project_detail', id=project.id) }}" class="btn btn-secondary">View Details</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <strong>No ideas available right now</strong>
+                    <p>Check back later or submit your own!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+</div>
+{% endblock %} 

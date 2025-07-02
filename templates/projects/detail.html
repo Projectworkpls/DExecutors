@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title if project else 'Project' }} - DExecutors{% endblock %}
+
+{% block content %}
+{% if project %}
+<div class="project-detail-container">
+    <div class="project-header">
+        <div class="header-content">
+            <h1>{{ project.title }}</h1>
+            <div class="project-meta">
+                <span class="budget">Budget: ₹{{ project.budget }}</span>
+                <span class="status status-{{ project.status }}">{{ project.status }}</span>
+                <span class="deadline">📅 Deadline: {{ project.deadline }}</span>
+                <span class="category">🏷️ {{ project.category if project.category else 'General' }}</span>
+            </div>
+        </div>
+        
+        {% if project.ai_feasibility_score %}
+        <div class="ai-badge">
+            <span class="ai-label">AI Score</span>
+            <span class="ai-score-large">{{ project.ai_feasibility_score }}%</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="project-content">
+        <div class="main-content">
+            <div class="project-description">
+                <h3>📝 Project Description</h3>
+                <div class="description-text">{{ project.description | replace('\n', '<br>') | safe }}</div>
+            </div>
+            
+            {% if project.milestones %}
+            <div class="milestones">
+                <h3>🎯 AI-Generated Milestones</h3>
+                <div class="milestone-list">
+                    {% for milestone in project.milestones %}
+                    <div class="milestone-item">
+                        <div class="milestone-header">
+                            <h4>{{ milestone.name if milestone.name else 'Milestone ' + loop.index|string }}</h4>
+                            {% if milestone.due_date %}
+                            <span class="milestone-date">{{ milestone.due_date }}</span>
+                            {% endif %}
+                        </div>
+                        <p>{{ milestone.description if milestone.description else 'Milestone description will be provided' }}</p>
+                        {% if milestone.budget %}
+                        <span class="milestone-budget">Budget: ₹{{ milestone.budget }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="sidebar">
+            <div class="project-stats">
+                <h4>📊 Project Stats</h4>
+                <div class="stat-item">
+                    <span class="stat-label">Posted:</span>
+                    <span class="stat-value">{{ project.created_at[:10] if project.created_at else 'Recently' }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Applications:</span>
+                    <span class="stat-value">{{ project.applications|length if project.applications else 0 }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Status:</span>
+                    <span class="stat-value">{{ project.status | title }}</span>
+                </div>
+            </div>
+            
+            {% if session.get('user_id') and session.get('user_id') != project.ideator_id %}
+            <div class="application-section">
+                {% if project.status == 'open' %}
+                <h4>💼 Apply for this Project</h4>
+                <form method="POST" action="#" class="application-form">
+                    <div class="form-group">
+                        <label for="proposal">Your Proposal</label>
+                        <textarea id="proposal" name="proposal" rows="4" placeholder="Explain why you're the right person for this project..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeline">Estimated Timeline (days)</label>
+                        <input type="number" id="timeline" name="timeline" min="1" placeholder="How many days do you need?">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">Submit Application</button>
+                </form>
+                {% else %}
+                <div class="application-closed">
+                    <p>Applications are closed for this project.</p>
+                </div>
+                {% endif %}
+            </div>
+            {% elif session.get('user_id') == project.ideator_id %}
+            <div class="owner-section">
+                <h4>🎯 Your Project</h4>
+                <p>This is your project. You can manage applications and track progress here.</p>
+                <button class="btn btn-secondary btn-full">Manage Applications</button>
+            </div>
+            {% else %}
+            <div class="login-prompt">
+                <h4>🔐 Login Required</h4>
+                <p>Please login to apply for this project.</p>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-full">Login</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="project-actions">
+        <a href="{{ url_for('projects.browse_projects') }}" class="btn btn-secondary">← Back to Browse</a>
+        {% if project.status == 'open' %}
+        <button class="btn btn-outline" onclick="shareProject()">📤 Share Project</button>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function shareProject() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ project.title }}',
+            text: 'Check out this project on DExecutors',
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Project link copied to clipboard!');
+        });
+    }
+}
+</script>
+
+{% else %}
+<div class="error-container">
+    <div class="error-content">
+        <h2>🔍 Project Not Found</h2>
+        <p>The project you're looking for doesn't exist or has been removed.</p>
+        <div class="error-actions">
+            <a href="{{ url_for('projects.browse_projects') }}" class="btn btn-primary">Browse Projects</a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Go Home</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

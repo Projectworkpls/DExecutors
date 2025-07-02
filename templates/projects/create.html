@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Post New Idea - DExecutors{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2>🚀 Post a New Idea</h2>
+        <p>Share your concept and let AI help you plan it out</p>
+    </div>
+    
+    <form method="POST" class="project-form">
+        <div class="form-group">
+            <label for="title">Project Title *</label>
+            <input type="text" id="title" name="title" placeholder="What's your big idea?" required maxlength="100">
+            <small class="form-hint">Keep it concise and catchy (max 100 characters)</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description *</label>
+            <textarea id="description" name="description" rows="6" placeholder="Describe your idea in detail. What problem does it solve? What should the final outcome look like?" required></textarea>
+            <small class="form-hint">Be as detailed as possible - this helps AI create better milestones</small>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="budget">Budget (₹) *</label>
+                <input type="number" id="budget" name="budget" step="0.01" max="5000" min="100" placeholder="Max ₹5,000" required>
+                <small class="form-hint">Level 1 users can post up to ₹5,000</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="deadline">Deadline *</label>
+                <input type="date" id="deadline" name="deadline" required>
+                <small class="form-hint">When do you need this completed?</small>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="general">General</option>
+                <option value="web-development">Web Development</option>
+                <option value="mobile-app">Mobile App</option>
+                <option value="design">Design</option>
+                <option value="content-writing">Content Writing</option>
+                <option value="marketing">Marketing</option>
+                <option value="research">Research</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        
+        <div class="ai-preview">
+            <h4>🤖 AI Analysis Preview</h4>
+            <p>Once you submit, our AI will analyze your project for:</p>
+            <ul>
+                <li>Feasibility assessment</li>
+                <li>Suggested milestones</li>
+                <li>Budget breakdown</li>
+                <li>Risk factors</li>
+                <li>Recommendations</li>
+            </ul>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">🚀 Create Project & Analyze with AI</button>
+            <a href="{{ url_for('dashboard.unified_dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Real-time budget validation
+document.getElementById('budget').addEventListener('input', function() {
+    const value = parseFloat(this.value);
+    const hint = this.nextElementSibling;
+    
+    if (value > 5000) {
+        this.style.borderColor = '#dc3545';
+        hint.textContent = 'Budget cannot exceed ₹5,000 for Level 1 users';
+        hint.style.color = '#dc3545';
+    } else if (value < 100) {
+        this.style.borderColor = '#ffc107';
+        hint.textContent = 'Minimum budget is ₹100';
+        hint.style.color = '#ffc107';
+    } else {
+        this.style.borderColor = '#28a745';
+        hint.textContent = 'Level 1 users can post up to ₹5,000';
+        hint.style.color = '#666';
+    }
+});
+
+// Set minimum date to today
+document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %} 
