@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DExecutors - Fund & Execute Ideas{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+</head>
+<body class="{% if request.endpoint == 'main.index' %}landing-bg{% endif %}">
+    <header>
+        <nav aria-label="Main navigation">
+            <div class="nav-brand">
+                <a href="{{ url_for('main.index') }}" class="brand-link" aria-label="DExecutors Home">🚀 DExecutors</a>
+            </div>
+            <div class="nav-links">
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('dashboard.unified_dashboard') }}">Dashboard</a>
+                    <a href="{{ url_for('projects.create_project') }}">Post Idea</a>
+                    <a href="{{ url_for('projects.browse_projects') }}">Browse</a>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                    <form id="logout-form" action="{{ url_for('auth.logout') }}" method="POST" style="display:none;"></form>
+                {% else %}
+                    <a href="{{ url_for('projects.browse_projects') }}">Browse Ideas</a>
+                    <a href="{{ url_for('auth.login') }}">Login</a>
+                    <a href="{{ url_for('auth.register') }}">Sign Up</a>
+                {% endif %}
+                <!-- Always show Admin Login -->
+                <a href="{{ url_for('a.login') }}" class="btn btn-secondary" style="margin-left: 12px;">Admin Login</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <section class="flash-messages" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 <strong>DExecutors</strong>. Building the future of micro-innovation.</p>
+    </footer>
+</body>
+</html>

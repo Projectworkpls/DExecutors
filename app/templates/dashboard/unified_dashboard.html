@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DExecutors{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- User Stats Header -->
+    <div class="stats-header card">
+        <div class="user-profile">
+            <h2>Welcome, {{ user.username if user else 'User' }}</h2>
+            <div class="xp-level">
+                <span class="level">Level {{ user.level if user else 1 }}</span>
+                <span class="xp">{{ user.reputation_xp if user else 0 }} XP</span>
+            </div>
+        </div>
+        <div class="quick-actions">
+            <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">Post Idea</a>
+            <a href="{{ url_for('projects.browse_projects') }}" class="btn btn-secondary">Browse Projects</a>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- My Projects -->
+        <div class="dashboard-card card">
+            <h3>💡 My Ideas</h3>
+            {% if my_projects %}
+                {% for project in my_projects[:3] %}
+                <div class="project-item">
+                    <h4>{{ project.title }}</h4>
+                    <div class="project-meta">
+                        <span class="status status-{{ project.status|lower }}">{{ project.status|capitalize }}</span>
+                        <span class="budget">₹{{ project.budget }}</span>
+                    </div>
+                    <a href="{{ url_for('projects.project_detail', id=project.id) }}" class="btn-small">View</a>
+                </div>
+                {% endfor %}
+                {% if my_projects|length > 3 %}
+                <p class="view-all"><a href="{{ url_for('projects.browse_projects') }}">View all {{ my_projects|length }} ideas</a></p>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No ideas posted yet.</p>
+                    <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">Post your first idea!</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Applied Projects -->
+        <div class="dashboard-card card">
+            <h3>⚡ My Executions</h3>
+            {% if applied_projects %}
+                {% for project in applied_projects[:3] %}
+                <div class="project-item">
+                    <h4>{{ project.title }}</h4>
+                    <div class="project-meta">
+                        <span class="status status-{{ project.status|lower }}">{{ project.status|capitalize }}</span>
+                        <span class="budget">₹{{ project.budget }}</span>
+                    </div>
+                    <a href="{{ url_for('projects.project_detail', id=project.id) }}" class="btn-small">View</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No executions yet.</p>
+                    <a href="{{ url_for('projects.browse_projects') }}" class="btn btn-secondary">Browse available projects!</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Opportunities -->
+        <div class="dashboard-card card">
+            <h3>🔥 Recent Opportunities</h3>
+            {% if recent_projects %}
+                {% for project in recent_projects %}
+                <div class="project-item">
+                    <h4>{{ project.title }}</h4>
+                    <div class="project-meta">
+                        <span class="budget">₹{{ project.budget }}</span>
+                        {% if project.ai_feasibility_score %}
+                        <span class="ai-score">AI: {{ project.ai_feasibility_score }}%</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('projects.project_detail', id=project.id) }}" class="btn-small">Apply</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No recent opportunities available.</p>
+                    <a href="{{ url_for('projects.browse_projects') }}" class="btn btn-secondary">Browse all projects</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="dashboard-card card">
+            <h3>🏆 Top Executors</h3>
+            <div class="leaderboard">
+                <div class="leaderboard-item">
+                    <span class="rank">🥇</span>
+                    <span class="name">CodeMaster</span>
+                    <span class="xp">2500 XP</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥈</span>
+                    <span class="name">DesignPro</span>
+                    <span class="xp">1800 XP</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥉</span>
+                    <span class="name">InnovateNow</span>
+                    <span class="xp">1200 XP</span>
+                </div>
+                {% if user %}
+                <div class="leaderboard-item user-rank">
+                    <span class="rank">🔸</span>
+                    <span class="name">{{ user.username }} (You)</span>
+                    <span class="xp">{{ user.reputation_xp }} XP</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
