@@ -33,16 +33,18 @@ def create_project():
             project_data['deadline']
         )
 
-        project_data['ai_feasibility_score'] = ai_analysis['feasibility_score']
-        project_data['milestones'] = ai_analysis['suggested_milestones']
+        # Store full AI analysis and key fields
+        project_data['ai_feasibility_analysis'] = ai_analysis
+        project_data['ai_feasibility_score'] = ai_analysis.get('feasibility_score')
+        project_data['milestones'] = ai_analysis.get('suggested_milestones', [])
         project_data['status'] = 'open'
 
         # Save to database
         result = supabase_service.create_project(project_data)
 
         if result.data:
-            flash('Project created successfully!', 'success')
-            return redirect(url_for('dashboard.unified_dashboard'))
+            flash('Project created and analyzed successfully!', 'success')
+            return redirect(url_for('projects.analysis_result', project_id=project_data['id']))
         else:
             flash('Error creating project', 'error')
 
@@ -55,6 +57,26 @@ def browse_projects():
 
 @projects_bp.route('/<id>')
 def project_detail(id):
-    project_resp = supabase_service.supabase.table('projects').select('*').eq('id', id).execute()
+    project_resp = supabase_service.get_projects({'id': id})
     project = project_resp.data[0] if project_resp.data else None
-    return render_template('projects/detail.html', project=project) 
+    return render_template('projects/detail.html', project=project)
+
+@projects_bp.route('/analysis_result/<project_id>')
+@login_required
+def analysis_result(project_id):
+    project_resp = supabase_service.get_projects({'id': project_id})
+    project = project_resp.data[0] if project_resp.data else None
+    ai_analysis = project.get('ai_feasibility_analysis', {}) if project else {}
+    return render_template('projects/analysis_result.html', project=project, ai_analysis=ai_analysis)
+
+
+@projects_bp.route('/confirm/<project_id>', methods=['POST'])
+@login_required
+def confirm_project(project_id):
+    # Update the project status to 'open'
+    update_result = supabase_service.update_project_status(project_id, 'open')
+    if update_result:
+        flash('Project confirmed and posted!', 'success')
+    else:
+        flash('Error confirming project.', 'error')
+    return redirect(url_for('dashboard.unified_dashboard'))

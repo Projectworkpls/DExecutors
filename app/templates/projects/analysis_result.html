@@ -1,0 +1,210 @@
+<!-- app/templates/projects/analysis_result.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project AI Analysis Result</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .section { margin-bottom: 2em; }
+        .score { font-size: 2em; font-weight: bold; color: #2c3e50; }
+        .milestone-list, .feedback-list, .outcome-list { list-style-type: disc; margin-left: 2em; }
+        .label { font-weight: bold; }
+        .recommendation { font-size: 1.2em; color: #16a085; }
+        .risk { color: #c0392b; }
+        .success { color: #27ae60; }
+        .warning { color: #e67e22; }
+        .confirm-btn {
+            padding: 0.7em 2em;
+            font-size: 1.1em;
+            background: #16a085;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            margin-top: 1em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Feasibility Analysis for "{{ project.title }}"</h1>
+
+    <!-- Feasibility Score and Recommendation -->
+    <div class="section">
+        <span class="label">Feasibility Score:</span>
+        <span class="score">{{ ai_analysis.get('feasibility_score', 'N/A') }}</span>
+        <span class="label">Complexity:</span>
+        {{ ai_analysis.get('complexity_level', 'N/A') }}
+    </div>
+
+    <div class="section">
+        <span class="label">Recommendation:</span>
+        <span class="recommendation">{{ ai_analysis.get('recommendation', 'N/A') }}</span>
+        <p>{{ ai_analysis.get('parent_message', '') }}</p>
+    </div>
+
+    <!-- Age Group Analysis -->
+    <div class="section">
+        <h2>Age Group Analysis</h2>
+        <ul>
+            <li><span class="label">Ideal Age Range:</span> {{ ai_analysis.get('ideal_age_range', 'N/A') }}</li>
+            <li><span class="label">Ideal Grades:</span> {{ ai_analysis.get('ideal_grades', 'N/A') }}</li>
+            <li><span class="label">Selected Grades Suitable:</span> {{ ai_analysis.get('selected_grades_suitable', 'N/A') }}</li>
+            <li><span class="label">Reason:</span> {{ ai_analysis.get('age_suitability_reason', '') }}</li>
+        </ul>
+    </div>
+
+    <!-- Time Analysis -->
+    <div class="section">
+        <h2>Time Analysis</h2>
+        <ul>
+            <li><span class="label">Estimated Hours:</span> {{ ai_analysis.get('estimated_hours', 'N/A') }}</li>
+            <li><span class="label">Recommended Timeline:</span> {{ ai_analysis.get('recommended_timeline', 'N/A') }}</li>
+            <li><span class="label">Is Deadline Realistic:</span> {{ ai_analysis.get('is_deadline_realistic', 'N/A') }}</li>
+            <li>
+                <span class="label">Time Breakdown:</span>
+                <ul>
+                    {% for task, hours in ai_analysis.get('time_breakdown', {}).items() %}
+                        <li>{{ task|capitalize }}: {{ hours }} hours</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Project Planning -->
+    <div class="section">
+        <h2>Project Planning</h2>
+        <h3>Suggested Milestones</h3>
+        <ul class="milestone-list">
+            {% for milestone in ai_analysis.get('suggested_milestones', []) %}
+                <li>
+                    <strong>{{ milestone.get('title', 'Milestone') }}</strong>: 
+                    {{ milestone.get('description', '') }} 
+                    ({{ milestone.get('estimated_hours', 'N/A') }} hrs)
+                </li>
+            {% else %}
+                <li>No milestones suggested.</li>
+            {% endfor %}
+        </ul>
+        <h3>Budget Breakdown</h3>
+        <ul>
+            {% for item, cost in ai_analysis.get('budget_breakdown', {}).items() %}
+                <li>{{ item }}: ₹{{ cost }}</li>
+            {% else %}
+                <li>No budget breakdown provided.</li>
+            {% endfor %}
+        </ul>
+        <h3>Risk Factors</h3>
+        <ul>
+            {% for risk in ai_analysis.get('risk_factors', []) %}
+                <li class="risk">{{ risk }}</li>
+            {% else %}
+                <li>No significant risks identified.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Possible Outcomes -->
+    <div class="section">
+        <h2>Possible Outcomes</h2>
+        <ul class="outcome-list">
+            {% for outcome in ai_analysis.get('possible_outcomes', []) %}
+                <li>{{ outcome }}</li>
+            {% else %}
+                <li>No specific outcomes listed.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Feedback & Recommendations -->
+    <div class="section">
+        <h2>Feedback & Recommendations</h2>
+        <ul class="feedback-list">
+            <li><span class="label">Strengths:</span>
+                <ul>
+                    {% for s in ai_analysis.get('strengths', []) %}
+                        <li class="success">{{ s }}</li>
+                    {% else %}
+                        <li>None listed.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <li><span class="label">Concerns:</span>
+                <ul>
+                    {% for c in ai_analysis.get('concerns', []) %}
+                        <li class="warning">{{ c }}</li>
+                    {% else %}
+                        <li>None listed.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <li><span class="label">Safety Considerations:</span>
+                <ul>
+                    {% for s in ai_analysis.get('safety_considerations', []) %}
+                        <li>{{ s }}</li>
+                    {% else %}
+                        <li>None listed.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <li><span class="label">Skill Requirements:</span>
+                <ul>
+                    {% for s in ai_analysis.get('skill_requirements', []) %}
+                        <li>{{ s }}</li>
+                    {% else %}
+                        <li>None listed.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <li><span class="label">Learning Outcomes:</span>
+                <ul>
+                    {% for l in ai_analysis.get('learning_outcomes', []) %}
+                        <li>{{ l }}</li>
+                    {% else %}
+                        <li>None listed.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <li><span class="label">Modifications:</span>
+                <ul>
+                    {% for m in ai_analysis.get('modifications', []) %}
+                        <li>{{ m }}</li>
+                    {% else %}
+                        <li>None listed.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <li><span class="label">Resources Needed:</span>
+                <ul>
+                    {% for r in ai_analysis.get('resources_needed', []) %}
+                        <li>{{ r }}</li>
+                    {% else %}
+                        <li>None listed.</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <li><span class="label">Adult Supervision Level:</span> {{ ai_analysis.get('adult_supervision_level', 'N/A') }}</li>
+            <li><span class="label">Budget Assessment:</span> {{ ai_analysis.get('budget_assessment', 'N/A') }}</li>
+        </ul>
+    </div>
+
+    <!-- Analysis Metadata -->
+    <div class="section">
+        <span class="label">Analysis Timestamp:</span> {{ ai_analysis.get('analysis_timestamp', 'N/A') }}
+    </div>
+
+    <!-- Parent Confirmation Form -->
+    <form method="post" action="{{ url_for('projects.confirm_project', project_id=project.id) }}">
+        <button type="submit" class="confirm-btn">
+            Confirm and Post Project
+        </button>
+    </form>
+
+    <div style="margin-top:2em;">
+        <a href="{{ url_for('dashboard.unified_dashboard') }}">Back to Dashboard</a>
+    </div>
+</body>
+</html>
