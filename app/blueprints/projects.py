@@ -79,4 +79,4 @@ def confirm_project(project_id):
         flash('Project confirmed and posted!', 'success')
     else:
         flash('Error confirming project.', 'error')
-    return redirect(url_for('dashboard.unified_dashboard'))
+    return redirect(url_for('dashboard.unified_dashboard')) #

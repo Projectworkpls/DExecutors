@@ -231,3 +231,6 @@ class GeminiAIService:
 
 # Initialize service
 gemini_service = GeminiAIService()
+
+
+#
