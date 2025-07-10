@@ -58,7 +58,13 @@
             </div>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">🚀 Create Project & Analyze with AI</button>
-                <a href="{{ url_for('dashboard.unified_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                {% if session.get('role') == 'parent' %}
+                    <a href="{{ url_for('dashboard.parent_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                {% elif session.get('role') == 'student' %}
+                    <a href="{{ url_for('dashboard.student_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
             </div>
         </form>
     </div>

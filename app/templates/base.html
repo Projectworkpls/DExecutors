@@ -10,24 +10,28 @@
 </head>
 <body class="{% if request.endpoint == 'main.index' %}landing-bg{% endif %}">
     <header>
-        <nav aria-label="Main navigation">
+        <nav class="main-nav" aria-label="Main navigation">
             <div class="nav-brand">
-                <a href="{{ url_for('main.index') }}" class="brand-link" aria-label="DExecutors Home">🚀 DExecutors</a>
+                <a href="{{ url_for('main.index') }}" class="brand-link" aria-label="DExecutors Home">🚀 <span style="color:#2c3e50;">DExecutors</span></a>
             </div>
             <div class="nav-links">
                 {% if session.get('user_id') %}
-                    <a href="{{ url_for('dashboard.unified_dashboard') }}">Dashboard</a>
-                    <a href="{{ url_for('projects.create_project') }}">Post Idea</a>
-                    <a href="{{ url_for('projects.browse_projects') }}">Browse</a>
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                    {% if session.get('role') == 'parent' %}
+                        <a href="{{ url_for('dashboard.parent_dashboard') }}" class="nav-link nav-parent">Dashboard</a>
+                    {% elif session.get('role') == 'student' %}
+                        <a href="{{ url_for('dashboard.student_dashboard') }}" class="nav-link nav-student">Dashboard</a>
+                    {% endif %}
+                    <a href="{{ url_for('projects.create_project') }}" class="nav-link nav-post">Post Idea</a>
+                    <a href="{{ url_for('projects.browse_projects') }}" class="nav-link nav-browse">Browse</a>
+                    <a href="#" class="nav-link nav-logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
                     <form id="logout-form" action="{{ url_for('auth.logout') }}" method="POST" style="display:none;"></form>
                 {% else %}
-                    <a href="{{ url_for('projects.browse_projects') }}">Browse Ideas</a>
-                    <a href="{{ url_for('auth.login') }}">Login</a>
-                    <a href="{{ url_for('auth.register') }}">Sign Up</a>
+                    <a href="{{ url_for('projects.browse_projects') }}" class="nav-link nav-browse">Browse Ideas</a>
+                    <a href="{{ url_for('auth.login') }}" class="nav-link nav-login">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="nav-link nav-signup">Sign Up</a>
                 {% endif %}
                 <!-- Always show Admin Login --> 
-                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary" style="margin-left: 12px;">Admin Login</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary nav-admin" style="margin-left: 12px;">Admin Login</a>
             </div>
         </nav>
     </header>

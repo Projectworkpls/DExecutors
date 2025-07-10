@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - DExecutors{% endblock %}
+
+{% block content %}
+<style>
+.dashboard-container {
+    max-width: 1100px;
+    margin: 40px auto 0 auto;
+    padding: 0 16px;
+}
+.card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 16px rgba(60, 90, 200, 0.08);
+    padding: 24px 28px;
+    margin-bottom: 32px;
+}
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+}
+.user-profile h2 {
+    margin: 0 0 8px 0;
+    font-size: 2rem;
+    color: #2d3a60;
+}
+.xp-level {
+    display: flex;
+    gap: 18px;
+    font-size: 1.1rem;
+    color: #3a4e8c;
+}
+.level {
+    font-weight: 600;
+}
+.quick-actions a {
+    margin-left: 12px;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: background 0.18s;
+}
+.btn-primary {
+    background: linear-gradient(90deg, #4f8cff 0%, #2357d5 100%);
+    color: #fff;
+    border: none;
+}
+.btn-primary:hover {
+    background: linear-gradient(90deg, #2357d5 0%, #4f8cff 100%);
+}
+.btn-secondary {
+    background: #f3f7ff;
+    color: #2d3a60;
+    border: 1px solid #b8c4e0;
+}
+.btn-secondary:hover {
+    background: #e7efff;
+}
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+}
+.dashboard-card {
+    min-height: 320px;
+}
+.dashboard-card h3 {
+    margin-top: 0;
+    color: #2357d5;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+.project-item {
+    border-bottom: 1px solid #f0f2fa;
+    padding: 12px 0;
+}
+.project-item h4 {
+    margin: 0 0 6px 0;
+    font-size: 1.08rem;
+    color: #2d3a60;
+}
+.project-meta {
+    font-size: 0.97rem;
+    color: #4a5a7a;
+    display: flex;
+    gap: 18px;
+    margin-bottom: 4px;
+}
+.status {
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.97rem;
+    font-weight: 500;
+}
+.status-pending, .status-applied { background: #fffbe6; color: #b09500; }
+.status-approved, .status-submitted { background: #e6f9e8; color: #217a3a; }
+.status-rejected { background: #ffeaea; color: #b12e2e; }
+.btn-small {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 0.97rem;
+    padding: 4px 14px;
+    border-radius: 5px;
+    background: #e7efff;
+    color: #2357d5;
+    border: none;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.18s;
+}
+.btn-small:hover {
+    background: #d2e2ff;
+}
+.empty-state {
+    margin: 24px 0;
+    color: #888;
+    text-align: center;
+}
+@media (max-width: 950px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}
+</style>
+
+<div class="dashboard-container">
+    <div class="stats-header card">
+        <div class="user-profile">
+            <h2>Welcome, {{ user.username if user else 'Student' }}</h2>
+            <div class="xp-level">
+                <span class="level">Level {{ user.level if user else 1 }}</span>
+                <span class="xp">{{ user.reputation_xp if user else 0 }} XP</span>
+            </div>
+        </div>
+        <div class="quick-actions">
+            <a href="{{ url_for('students.submit_idea') }}" class="btn btn-primary">Submit Idea</a>
+            <a href="{{ url_for('students.browse_projects') }}" class="btn btn-secondary">Browse Projects</a>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- My Submissions -->
+        <div class="dashboard-card card">
+            <h3>📤 My Submissions</h3>
+            {% if my_submissions %}
+                {% for submission in my_submissions %}
+                <div class="project-item">
+                    <h4>{{ submission.title or submission.project_title }}</h4>
+                    <div class="project-meta">
+                        <span class="status status-{{ submission.status|lower }}">{{ submission.status|capitalize }}</span>
+                        <span class="submitted-at">
+                            Submitted: 
+                            {% if submission.submitted_at %}
+                                {{ submission.submitted_at|date('d M Y') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span>
+                    </div>
+                    <a href="{{ url_for('students.submission_analysis', submission_id=submission.id) }}" class="btn-small">View</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No submissions yet.</p>
+                    <a href="{{ url_for('students.submit_idea') }}" class="btn btn-primary">Submit your first idea!</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- My Project Applications -->
+        <div class="dashboard-card card">
+            <h3>📝 My Project Applications</h3>
+            {% if my_applications %}
+                {% for app in my_applications %}
+                <div class="project-item">
+                    <h4>{{ app.project_title }}</h4>
+                    <div class="project-meta">
+                        <span class="status status-{{ app.application_status|lower }}">{{ app.application_status|capitalize }}</span>
+                        <span class="status status-{{ app.submission_status|lower }}">{{ app.submission_status|capitalize }}</span>
+                    </div>
+                    {% if not app.submitted %}
+                        <a href="{{ url_for('students.submit_project', application_id=app.id) }}" class="btn-small">Submit Project</a>
+                    {% else %}
+                        <a href="{{ url_for('students.view_submission', submission_id=app.submission_id) }}" class="btn-small">View Submission</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No project applications yet.</p>
+                    <a href="{{ url_for('students.browse_projects') }}" class="btn btn-secondary">Apply to a project</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Opportunities -->
+        <div class="dashboard-card card">
+            <h3>🔥 Recent Opportunities</h3>
+            {% if recent_projects %}
+                {% for project in recent_projects %}
+                <div class="project-item">
+                    <h4>{{ project.title }}</h4>
+                    <div class="project-meta">
+                        <span class="budget">₹{{ project.budget }}</span>
+                        {% if project.ai_feasibility_score %}
+                        <span class="ai-score">AI: {{ project.ai_feasibility_score }}%</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('projects.project_detail', id=project.id) }}" class="btn-small">Apply</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No recent opportunities available.</p>
+                    <a href="{{ url_for('students.browse_projects') }}" class="btn btn-secondary">Browse all projects</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

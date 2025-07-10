@@ -23,4 +23,16 @@ class SupabaseService:
                 query = query.eq(key, value)
         return query.execute()
 
-supabase_service = SupabaseService() 
+    # New: Create a submission (student submits work)
+    def create_submission(self, submission_data):
+        return self.supabase.table('work_submissions').insert(submission_data).execute()
+
+    # New: Get submissions (student's submissions or all)
+    def get_submissions(self, filters=None):
+        query = self.supabase.table('work_submissions').select('*')
+        if filters:
+            for key, value in filters.items():
+                query = query.eq(key, value)
+        return query.execute()
+
+supabase_service = SupabaseService()

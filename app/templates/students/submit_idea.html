@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Submit New Idea{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #e3f0ff 0%, #b0c4ff 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    }
+    .submit-idea-outer {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 48px 0;
+    }
+    .submit-idea-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 32px rgba(60, 90, 200, 0.10);
+        padding: 40px 32px 32px 32px;
+        width: 100%;
+        max-width: 480px;
+        margin: 0 16px;
+    }
+    .submit-idea-title {
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: #2d3a60;
+        font-size: 2rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    .submit-idea-desc {
+        margin-bottom: 24px;
+        color: #4a5a7a;
+        font-size: 1.1rem;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: #31416b;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #b8c4e0;
+        border-radius: 6px;
+        font-size: 1rem;
+        background: #f8faff;
+        transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        border-color: #5b8cff;
+        outline: none;
+        background: #f0f6ff;
+    }
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    .btn {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #4f8cff 0%, #2357d5 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(80, 120, 255, 0.10);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #2357d5 0%, #4f8cff 100%);
+    }
+    .btn-secondary {
+        background: #f3f7ff;
+        color: #2d3a60;
+        border: 1px solid #b8c4e0;
+    }
+    .btn-secondary:hover {
+        background: #e7efff;
+    }
+    .flashes {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 18px;
+    }
+    .flashes li {
+        padding: 10px 14px;
+        border-radius: 5px;
+        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+    .flash-success {
+        background: #e6f9e8;
+        color: #217a3a;
+        border: 1px solid #b6e6c3;
+    }
+    .flash-error {
+        background: #ffeaea;
+        color: #b12e2e;
+        border: 1px solid #f5bcbc;
+    }
+    .ai-analysis-section {
+        background: #f7faff;
+        border: 1px solid #d2e2ff;
+        border-radius: 8px;
+        padding: 18px 16px;
+        margin-bottom: 18px;
+    }
+    .ai-analysis-section h4 {
+        margin: 0 0 6px 0;
+        color: #2357d5;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .ai-analysis-section pre {
+        background: #f0f5ff;
+        color: #31416b;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 0.97rem;
+        margin: 0 0 8px 0;
+        overflow-x: auto;
+    }
+    .ai-analysis-note {
+        font-size: 0.96rem;
+        color: #5b7acb;
+        margin: 0;
+    }
+</style>
+
+<div class="submit-idea-outer">
+    <div class="submit-idea-card">
+        <h2 class="submit-idea-title">Submit a New Project Idea</h2>
+        <p class="submit-idea-desc">Describe your idea. The AI will analyze it before you send it for approval.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for category, message in messages %}
+                <li class="flash-{{ category }}">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="title">Project Title</label>
+                <input type="text" name="title" id="title" required placeholder="Enter project title" value="{{ request.form.title or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="description">Project Description</label>
+                <textarea name="description" id="description" rows="4" required placeholder="Describe your idea">{{ request.form.description or '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="budget">Estimated Budget (₹)</label>
+                <input type="number" name="budget" id="budget" min="0" step="0.01" required placeholder="Enter budget" value="{{ request.form.budget or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="deadline">Deadline</label>
+                <input type="date" name="deadline" id="deadline" required value="{{ request.form.deadline or '' }}">
+            </div>
+
+            {% if analysis %}
+            <div class="ai-analysis-section">
+                <h4>AI Analysis Result</h4>
+                <pre>{{ analysis | tojson(indent=2) }}</pre>
+                <p class="ai-analysis-note">If the analysis looks good, you can submit your idea for admin approval.</p>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                {% if not analysis %}
+                <button type="submit" name="action" value="analyze" class="btn btn-secondary">Analyze with AI</button>
+                {% endif %}
+                {% if analysis %}
+                <button type="submit" name="action" value="submit" class="btn btn-primary">Submit for Approval</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
