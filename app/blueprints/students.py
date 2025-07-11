@@ -92,10 +92,17 @@ def browse_projects():
         return redirect(url_for('auth.login'))
 
     analysis = None
-    projects = supabase_service.get_projects({'status': 'open'})
+    projects_resp = supabase_service.get_projects({'status': 'open'})
+    projects = projects_resp.data if projects_resp and projects_resp.data else []
+
     if request.method == 'POST':
         selected_title = request.form['project_title']
-        selected_project = next((p for p in projects.data if p['title'] == selected_title), {})
+        selected_project = next((p for p in projects if p['title'] == selected_title), None)
+
+        if not selected_project:
+            flash('Selected project not found.', 'error')
+            return redirect(url_for('students.browse_projects'))
+
         budget = selected_project.get('budget', 0)
         deadline = selected_project.get('deadline', '')
         description = request.form['submission_description']
@@ -109,7 +116,6 @@ def browse_projects():
             )
             # Store analysis and project in session for the result page
             session['analysis'] = analysis
-            # Add student submission description to the project for context
             project_for_session = dict(selected_project)
             project_for_session['description'] = description
             session['analysis_project'] = project_for_session
@@ -117,10 +123,10 @@ def browse_projects():
 
         elif request.form.get('action') == 'submit':
             # Retrieve the analysis from the hidden field or session if needed
-            ai_analysis = request.form.get('ai_analysis_json')
-            if ai_analysis:
+            ai_analysis_json = request.form.get('ai_analysis_json')
+            if ai_analysis_json:
                 try:
-                    ai_analysis = json.loads(ai_analysis)
+                    ai_analysis = json.loads(ai_analysis_json)
                 except Exception:
                     ai_analysis = None
             else:
@@ -148,7 +154,7 @@ def browse_projects():
                 flash('Error submitting project.', 'error')
             return redirect(url_for('students.student_dashboard'))
 
-    return render_template('students/browse_projects.html', projects=projects.data, analysis=analysis)
+    return render_template('students/browse_projects.html', projects=projects, analysis=analysis)
 
 # Show AI Analysis Results (after Analyze with AI)
 @students_bp.route('/analysis_results')
@@ -183,3 +189,74 @@ def apply_for_project(project_id):
         flash('Error applying for project.', 'error')
     return redirect(url_for('students.browse_projects'))
 
+@students_bp.route('/submit-project', methods=['GET', 'POST'])
+@students_bp.route('/submit-project/<int:application_id>', methods=['GET', 'POST'])
+@login_required
+def submit_project(application_id=None):
+    # Fetch all open projects (or filter as needed)
+    projects_resp = supabase_service.get_projects({'status': 'open'})
+    projects = projects_resp.data if projects_resp and projects_resp.data else []
+
+    analysis = None
+    error = None
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        project_title = request.form.get('project_title')
+        description = request.form.get('submission_description')
+        uploaded_file = request.files.get('submission_file')
+
+        # Validate required fields
+        if not project_title or not description:
+            error = "Please select a project and provide a description."
+        else:
+            selected_project = next((p for p in projects if p['title'] == project_title), None)
+            if not selected_project:
+                error = "Selected project not found."
+
+        if not error:
+            if action == 'analyze':
+                analysis = gemini_service.analyze_project_feasibility(
+                    project_title,
+                    description,
+                    selected_project.get('budget', 0),
+                    selected_project.get('deadline', '')
+                )
+            elif action == 'submit':
+                ai_analysis_json = request.form.get('ai_analysis_json')
+                if ai_analysis_json:
+                    try:
+                        ai_analysis = json.loads(ai_analysis_json)
+                    except Exception:
+                        ai_analysis = None
+                else:
+                    ai_analysis = None
+
+                submission_data = {
+                    'id': str(uuid.uuid4()),
+                    'student_id': session['user_id'],
+                    'project_id': selected_project.get('id'),
+                    'title': project_title,
+                    'description': description,
+                    'budget': selected_project.get('budget', 0),
+                    'deadline': selected_project.get('deadline', ''),
+                    'submitted_at': datetime.utcnow().isoformat(),
+                    'status': 'pending_review',
+                    'ai_analysis': ai_analysis
+                }
+
+                # TODO: Handle file upload saving if needed
+
+                result = supabase_service.create_submission(submission_data)
+                if result.data:
+                    flash('Project submitted for admin approval!', 'success')
+                    return redirect(url_for('students.student_dashboard'))
+                else:
+                    error = "Error submitting project."
+
+    return render_template(
+        'students/submit_project.html',
+        projects=projects,
+        analysis=analysis,
+        error=error
+    )

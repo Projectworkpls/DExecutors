@@ -129,17 +129,32 @@ nav .nav-links {
     gap: var(--spacing-md);
 }
 
-nav a {
+/* Make brand and key nav links bold and consistent */
+.brand-link, 
+.nav-links a, 
+.btn.btn-secondary.nav-admin {
+    font-weight: 700;
+    font-family: 'Manrope', Arial, sans-serif;
     color: #222;
     text-decoration: none;
-    font-weight: 500;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: 6px;
     transition: background 0.2s;
 }
 
-nav a:hover {
+/* Brand link specific styling */
+.brand-link {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: #2c3e50;
+}
+
+/* Hover effect for nav links and buttons */
+nav .nav-links a:hover, 
+.btn.btn-secondary.nav-admin:hover,
+.brand-link:hover {
     background: #f3f3f3;
+    color: #222;
 }
 
 /* Flash Messages */
@@ -523,11 +538,6 @@ input:focus {
     color: #7f53ac;
     text-decoration: underline;
     font-weight: 600;
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(24px);}
-    to { opacity: 1; transform: none;}
 }
 
 /* Dashboard and Detail page improvements */

@@ -2,40 +2,29 @@
 
 {% block content %}
 <div class="main-container landing-bg">
-<section class="hero">
+  <section class="hero">
     <div class="container">
-        <div class="hero-content">
-            <span class="hero-icon">🌟</span>
-            <h1 class="hero-title">Regretful Ideas Brought to Life</h1>
-            <p class="hero-desc">
-                Teens, pick an idea and show your talent! Parents,
-                <a href="{{ url_for('auth.login') }}">log in</a> to submit your dream project.
-            </p>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary hero-btn">Submit Your Idea</a>
-        </div>
-        <div class="ideas-list">
-            {% if projects %}
-                <div class="projects-grid">
-                    {% for project in projects %}
-                        <div class="project-card">
-                            <h3>{{ project.title }}</h3>
-                            <p>{{ project.description[:120] }}{% if project.description|length > 120 %}...{% endif %}</p>
-                            <div class="project-meta">
-                                <span>₹{{ project.budget }}</span>
-                                <span>{{ project.deadline }}</span>
-                            </div>
-                            <a href="{{ url_for('projects.project_detail', id=project.id) }}" class="btn btn-secondary">View Details</a>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <strong>No ideas available right now</strong>
-                    <p>Check back later or submit your own!</p>
-                </div>
-            {% endif %}
-        </div>
+      <div class="hero-content center-text">
+        <span class="hero-icon" aria-hidden="true">🌟</span>
+        <h1 class="hero-title">Regretful Ideas Brought to Life</h1>
+        <p class="hero-desc">
+          Welcome to <strong>DExecutors</strong> — a platform dedicated to empowering teens to explore their creativity and bring their ideas to life. Whether you’re a young innovator or a supportive parent, this project is here to help transform dreams into reality.
+        </p>
+      </div>
     </div>
-</section>
+  </section>
+
+  <section class="about-section">
+    <div class="container">
+      <h2>About DExecutors</h2>
+      <p>
+        DExecutors is a unique initiative designed to connect talented teens with resources and mentorship to develop their ideas into meaningful projects.
+        Our goal is to nurture creativity, encourage learning, and foster collaboration between young minds and their communities.
+      </p>
+      <p>
+        Explore the platform to learn more about how we support project development, provide guidance, and celebrate innovation.
+      </p>
+    </div>
+  </section>
 </div>
-{% endblock %} 
+{% endblock %}
