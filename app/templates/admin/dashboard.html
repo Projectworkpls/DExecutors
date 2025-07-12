@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                Admin Dashboard
+            </h1>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.analytics') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Analytics
+                </a>
+                <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-users me-2"></i>
+                    Manage Users
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.pending_approvals }}</h4>
+                        <p class="card-text">Pending Approvals</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.total_projects }}</h4>
+                        <p class="card-text">Total Projects</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-project-diagram fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.total_students }}</h4>
+                        <p class="card-text">Active Students</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-graduate fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.total_parents }}</h4>
+                        <p class="card-text">Active Parents</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Pending Project Ideas -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Pending Project Ideas
+                    <span class="badge bg-light text-dark ms-2">{{ pending_projects|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if pending_projects %}
+                    {% for project in pending_projects[:5] %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <h6 class="fw-bold">{{ project.title }}</h6>
+                        <p class="text-muted small mb-2">{{ project.description[:100] }}...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ project.created_at.strftime('%b %d, %Y') if project.created_at else 'Recently' }}
+                            </small>
+                            <div>
+                                <span class="badge bg-success me-2">{{ project.credits }} Credits</span>
+                                <a href="{{ url_for('admin.approve_ideas') }}" class="btn btn-sm btn-outline-primary">
+                                    Review
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if pending_projects|length > 5 %}
+                    <div class="text-center">
+                        <a href="{{ url_for('admin.approve_ideas') }}" class="btn btn-warning">
+                            View All {{ pending_projects|length }} Pending Ideas
+                        </a>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No pending project ideas</h6>
+                        <p class="text-muted small">All project ideas have been reviewed!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Submissions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Pending Submissions
+                    <span class="badge bg-light text-dark ms-2">{{ pending_submissions|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if pending_submissions %}
+                    {% for submission in pending_submissions[:5] %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <h6 class="fw-bold">{{ submission.projects.title if submission.projects else 'Unknown Project' }}</h6>
+                        <p class="text-muted small mb-2">
+                            By: {{ submission.users.full_name if submission.users else 'Unknown Student' }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ submission.submitted_at.strftime('%b %d, %Y') if submission.submitted_at else 'Recently' }}
+                            </small>
+                            <div>
+                                {% if submission.ai_evaluation %}
+                                    {% set ai_eval = submission.ai_evaluation if submission.ai_evaluation is mapping else (submission.ai_evaluation | from_json) %}
+                                    {% if ai_eval and ai_eval.get('overall_score') %}
+                                    <span class="badge bg-info me-2">AI: {{ ai_eval.overall_score }}/100</span>
+                                    {% endif %}
+                                {% endif %}
+                                <a href="{{ url_for('admin.approve_submissions') }}" class="btn btn-sm btn-outline-primary">
+                                    Review
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if pending_submissions|length > 5 %}
+                    <div class="text-center">
+                        <a href="{{ url_for('admin.approve_submissions') }}" class="btn btn-primary">
+                            View All {{ pending_submissions|length }} Pending Submissions
+                        </a>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No pending submissions</h6>
+                        <p class="text-muted small">All submissions have been reviewed!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.approve_ideas') }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-lightbulb fa-2x mb-2"></i>
+                            <div>Review Project Ideas</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.approve_submissions') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-clipboard-check fa-2x mb-2"></i>
+                            <div>Review Submissions</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <div>Manage Users</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.analytics') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                            <div>View Analytics</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

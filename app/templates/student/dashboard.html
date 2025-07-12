@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                Student Dashboard
+            </h1>
+            <div class="d-flex align-items-center">
+                <span class="me-3">
+                    <i class="fas fa-star text-warning me-1"></i>
+                    <span class="badge bg-warning text-dark fs-6">{{ total_points }} Points</span>
+                </span>
+                <a href="{{ url_for('student.opportunities') }}" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>
+                    Browse Opportunities
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ available_projects|length }}</h4>
+                        <p class="card-text">Available Projects</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clipboard-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ submissions|selectattr('status', 'equalto', 'claimed')|list|length }}</h4>
+                        <p class="card-text">In Progress</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cog fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ submissions|selectattr('status', 'equalto', 'pending')|list|length }}</h4>
+                        <p class="card-text">Pending Review</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ submissions|selectattr('status', 'equalto', 'approved')|list|length }}</h4>
+                        <p class="card-text">Completed</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-trophy fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Available Opportunities -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    Latest Opportunities
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if available_projects %}
+                    {% for project in available_projects %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <h6 class="fw-bold">{{ project.title }}</h6>
+                        <p class="text-muted small mb-2">{{ project.description[:100] }}...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-success">{{ project.credits }} Credits</span>
+                            <form method="POST" action="{{ url_for('student.claim_project', project_id=project.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-hand-paper me-1"></i>Claim
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No opportunities available</h6>
+                        <p class="text-muted small">Check back later for new projects!</p>
+                    </div>
+                {% endif %}
+                
+                {% if available_projects|length > 0 %}
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('student.opportunities') }}" class="btn btn-primary">
+                        View All Opportunities
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- My Submissions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-tasks me-2"></i>
+                    My Submissions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if submissions %}
+                    {% for submission in submissions %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <h6 class="fw-bold">{{ submission.projects.title if submission.projects else 'Unknown Project' }}</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            {% if submission.status == 'claimed' %}
+                                <span class="badge bg-warning">In Progress</span>
+                            {% elif submission.status == 'pending' %}
+                                <span class="badge bg-primary">Under Review</span>
+                            {% elif submission.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif submission.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                            
+                            {% if submission.points_awarded > 0 %}
+                                <span class="text-success fw-bold">+{{ submission.points_awarded }} points</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if submission.status == 'claimed' %}
+                            <a href="{{ url_for('student.submit_project') }}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-upload me-1"></i>Submit Work
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No submissions yet</h6>
+                        <p class="text-muted small">Claim a project to get started!</p>
+                    </div>
+                {% endif %}
+                
+                {% if submissions|length > 0 %}
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('student.my_submissions') }}" class="btn btn-info">
+                        View All Submissions
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Your Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Points Breakdown</h6>
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ (total_points / 100) * 100 if total_points < 100 else 100 }}%">
+                                {{ total_points }} Points
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>Current Level: {% if total_points < 50 %}Beginner{% elif total_points < 100 %}Intermediate{% else %}Advanced{% endif %}</span>
+                            <span>Next Level: {% if total_points < 50 %}50 points{% elif total_points < 100 %}100 points{% else %}Keep going!{% endif %}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Recent Activity</h6>
+                        {% if submissions %}
+                            {% for submission in submissions[:3] %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small">{{ submission.projects.title if submission.projects else 'Project' }}</span>
+                                {% if submission.status == 'approved' %}
+                                    <span class="badge bg-success">+{{ submission.points_awarded }} pts</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ submission.status.title() }}</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted small">No recent activity</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}AI Project Evaluation{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-info text-white py-4">
+                <h3 class="mb-0 text-center">
+                    <i class="fas fa-robot me-2"></i>
+                    AI Project Evaluation
+                </h3>
+                <p class="mb-0 text-center mt-2 opacity-75">
+                    Project: {{ project_title }}
+                </p>
+            </div>
+            <div class="card-body p-0">
+                <!-- Chat Container -->
+                <div id="chatContainer" class="p-4" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+                    <div class="chat-message ai-message mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <div class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="bg-white p-3 rounded-3 shadow-sm">
+                                    <div class="markdown-content">{{ initial_response|safe }}</div>
+                                </div>
+                                <small class="text-muted">AI Assistant</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Input -->
+                <div class="p-4 border-top">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="chatInput" placeholder="Type your response..." 
+                               onkeypress="handleKeyPress(event)">
+                        <button class="btn btn-info" type="button" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-success" onclick="finalizeEvaluation()" id="finalizeBtn" style="display: none;">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Finalize Project Evaluation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let messageCount = 1;
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addMessageToChat(message, 'user');
+    input.value = '';
+    
+    // Show loading
+    showLoading();
+    
+    // Send to backend
+    fetch('{{ url_for("parent.ai_chat") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.response) {
+            addMessageToChat(data.response, 'ai');
+            messageCount++;
+            
+            // Show finalize button after a few exchanges
+            if (messageCount >= 3) {
+                document.getElementById('finalizeBtn').style.display = 'block';
+            }
+        } else {
+            addMessageToChat('Sorry, there was an error processing your message.', 'ai');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        addMessageToChat('Sorry, there was an error processing your message.', 'ai');
+    });
+}
+
+function addMessageToChat(message, sender) {
+    const chatContainer = document.getElementById('chatContainer');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message mb-3`;
+    
+    if (sender === 'user') {
+        messageDiv.innerHTML = `
+            <div class="d-flex justify-content-end">
+                <div class="flex-grow-1 me-3 text-end">
+                    <div class="bg-primary text-white p-3 rounded-3 shadow-sm d-inline-block">
+                        ${message}
+                    </div>
+                    <div><small class="text-muted">You</small></div>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        messageDiv.innerHTML = `
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <div class="avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="bg-white p-3 rounded-3 shadow-sm">
+                        <div class="markdown-content">${message}</div>
+                    </div>
+                    <small class="text-muted">AI Assistant</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function showLoading() {
+    addMessageToChat('<i class="fas fa-spinner fa-spin"></i> Thinking...', 'ai');
+}
+
+function hideLoading() {
+    const chatContainer = document.getElementById('chatContainer');
+    const loadingMessages = chatContainer.querySelectorAll('.ai-message:last-child');
+    if (loadingMessages.length > 0) {
+        const lastMessage = loadingMessages[loadingMessages.length - 1];
+        if (lastMessage.innerHTML.includes('fa-spinner')) {
+            lastMessage.remove();
+        }
+    }
+}
+
+function finalizeEvaluation() {
+    const btn = document.getElementById('finalizeBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Finalizing...';
+    btn.disabled = true;
+    
+    fetch('{{ url_for("parent.finalize_evaluation") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            alert('Error finalizing evaluation: ' + data.error);
+            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Finalize Project Evaluation';
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        alert('Error finalizing evaluation');
+        btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Finalize Project Evaluation';
+        btn.disabled = false;
+    });
+}
+</script>
+
+<style>
+.chat-message {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.markdown-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+</style>
+{% endblock %}

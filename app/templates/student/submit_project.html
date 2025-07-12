@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Project{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-success text-white py-4">
+                <h3 class="mb-0 text-center">
+                    <i class="fas fa-upload me-2"></i>
+                    Submit Your Project
+                </h3>
+                <p class="mb-0 text-center mt-2 opacity-75">
+                    Share your completed work for review
+                </p>
+            </div>
+            <div class="card-body p-5">
+                {% if claimed_projects %}
+                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <div class="mb-4">
+                        <label for="project_id" class="form-label h5">Select Project</label>
+                        <select class="form-select form-select-lg" id="project_id" name="project_id" required onchange="updateProjectInfo()">
+                            <option value="">Choose a project to submit...</option>
+                            {% for submission in claimed_projects %}
+                            <option value="{{ submission.project_id }}" 
+                                    data-title="{{ submission.projects.title if submission.projects else 'Unknown' }}"
+                                    data-description="{{ submission.projects.description if submission.projects else '' }}"
+                                    data-credits="{{ submission.projects.credits if submission.projects else 0 }}">
+                                {{ submission.projects.title if submission.projects else 'Project #' + submission.project_id|string }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a project to submit.
+                        </div>
+                    </div>
+
+                    <!-- Project Info Display -->
+                    <div id="projectInfo" class="alert alert-info" style="display: none;">
+                        <h6 class="alert-heading">Project Details</h6>
+                        <p id="projectDescription" class="mb-2"></p>
+                        <small class="text-muted">
+                            <i class="fas fa-star me-1"></i>
+                            Worth <span id="projectCredits">0</span> credits
+                        </small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="submission_type" class="form-label h5">Submission Type</label>
+                        <select class="form-select" id="submission_type" name="submission_type" required onchange="toggleSubmissionFields()">
+                            <option value="">Select submission type...</option>
+                            <option value="text">Text Description</option>
+                            <option value="image">Image/Photo</option>
+                            <option value="video">Video</option>
+                            <option value="url">Website/URL</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a submission type.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label h5">Project Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="6" 
+                                  placeholder="Describe what you created, how you made it, and what you learned..." required></textarea>
+                        <div class="form-text">Explain your project in detail - this helps with evaluation</div>
+                        <div class="invalid-feedback">
+                            Please provide a description of your project.
+                        </div>
+                    </div>
+
+                    <!-- File Upload Field -->
+                    <div id="fileUploadField" class="mb-4" style="display: none;">
+                        <label for="file" class="form-label h5">Upload File</label>
+                        <div class="file-upload-area border-2 border-dashed rounded p-4 text-center">
+                            <input type="file" class="form-control" id="file" name="file" accept="" style="display: none;">
+                            <div class="upload-placeholder">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Click to upload or drag and drop</h5>
+                                <p class="text-muted mb-0">Maximum file size: 16MB</p>
+                            </div>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please upload a file for your submission.
+                        </div>
+                    </div>
+
+                    <!-- URL Field -->
+                    <div id="urlField" class="mb-4" style="display: none;">
+                        <label for="url" class="form-label h5">Project URL</label>
+                        <input type="url" class="form-control" id="url" name="url" 
+                               placeholder="https://example.com/my-project">
+                        <div class="form-text">Share a link to your online project</div>
+                        <div class="invalid-feedback">
+                            Please provide a valid URL.
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-robot me-2"></i>
+                        <strong>AI Review Process:</strong>
+                        <p class="mb-0 mt-2">Your submission will be automatically reviewed by our AI system to check if it meets the project requirements. The admin will then make the final approval decision.</p>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Submit for Review
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No Projects to Submit</h4>
+                    <p class="text-muted">You need to claim a project before you can submit work.</p>
+                    <a href="{{ url_for('student.opportunities') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>
+                        Browse Opportunities
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateProjectInfo() {
+    const select = document.getElementById('project_id');
+    const projectInfo = document.getElementById('projectInfo');
+    const projectDescription = document.getElementById('projectDescription');
+    const projectCredits = document.getElementById('projectCredits');
+    
+    if (select.value) {
+        const option = select.options[select.selectedIndex];
+        const description = option.getAttribute('data-description');
+        const credits = option.getAttribute('data-credits');
+        
+        projectDescription.textContent = description || 'No description available';
+        projectCredits.textContent = credits || '0';
+        projectInfo.style.display = 'block';
+    } else {
+        projectInfo.style.display = 'none';
+    }
+}
+
+function toggleSubmissionFields() {
+    const submissionType = document.getElementById('submission_type').value;
+    const fileUploadField = document.getElementById('fileUploadField');
+    const urlField = document.getElementById('urlField');
+    const fileInput = document.getElementById('file');
+    const urlInput = document.getElementById('url');
+    
+    // Hide all fields first
+    fileUploadField.style.display = 'none';
+    urlField.style.display = 'none';
+    fileInput.required = false;
+    urlInput.required = false;
+    
+    // Show relevant field based on selection
+    if (submissionType === 'image') {
+        fileUploadField.style.display = 'block';
+        fileInput.required = true;
+        fileInput.accept = 'image/*';
+    } else if (submissionType === 'video') {
+        fileUploadField.style.display = 'block';
+        fileInput.required = true;
+        fileInput.accept = 'video/*';
+    } else if (submissionType === 'url') {
+        urlField.style.display = 'block';
+        urlInput.required = true;
+    }
+}
+
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

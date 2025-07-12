@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Approve Submissions{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-clipboard-check me-2 text-primary"></i>
+                Review Student Submissions
+            </h1>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if submissions %}
+    <div class="row">
+        {% for submission in submissions %}
+        <div class="col-lg-6 mb-4">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ submission.projects.title if submission.projects else 'Unknown Project' }}</h5>
+                    <small>
+                        <i class="fas fa-user me-1"></i>
+                        {{ submission.users.full_name if submission.users else 'Unknown Student' }} • 
+                        {{ submission.submitted_at.strftime('%B %d, %Y at %I:%M %p') if submission.submitted_at else 'Recently submitted' }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <!-- Student's Description -->
+                    <div class="mb-3">
+                        <h6>Student's Description:</h6>
+                        <p class="text-muted">{{ submission.description or 'No description provided' }}</p>
+                    </div>
+                    
+                    <!-- Submission Type and File -->
+                    <div class="mb-3">
+                        <h6>Submission Type:</h6>
+                        <span class="badge bg-info">{{ submission.submission_type.title() }}</span>
+                        
+                        {% if submission.file_url %}
+                        <div class="mt-2">
+                            {% if submission.submission_type == 'image' %}
+                                <img src="{{ submission.file_url }}" alt="Student submission" class="img-fluid rounded" style="max-height: 200px;">
+                            {% elif submission.submission_type == 'video' %}
+                                <video controls class="w-100 rounded" style="max-height: 200px;">
+                                    <source src="{{ submission.file_url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            {% elif submission.submission_type == 'url' %}
+                                <a href="{{ submission.file_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-external-link-alt me-1"></i>
+                                    View Project
+                                </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- AI Evaluation Results -->
+                    {% if submission.ai_evaluation %}
+                        {% set ai_eval = submission.ai_evaluation if submission.ai_evaluation is mapping else (submission.ai_evaluation | from_json) %}
+                        {% if ai_eval %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-robot me-2"></i>
+                                AI Evaluation Results
+                            </h6>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <strong>Overall Score:</strong>
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ ai_eval.get('overall_score', 0) }}%">
+                                            {{ ai_eval.get('overall_score', 0) }}/100
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Quality Tier:</strong>
+                                    {% set quality = ai_eval.get('quality_tier', 'unknown') %}
+                                    {% if quality == 'exceptional' %}
+                                        <span class="badge bg-success">{{ quality.title() }}</span>
+                                    {% elif quality == 'good' %}
+                                        <span class="badge bg-primary">{{ quality.title() }}</span>
+                                    {% elif quality == 'satisfactory' %}
+                                        <span class="badge bg-warning">{{ quality.title() }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ quality.title() }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if ai_eval.get('parameter_scores') %}
+                            <div class="mb-3">
+                                <strong>Parameter Scores:</strong>
+                                <div class="row g-2 mt-1">
+                                    {% for param, score in ai_eval.parameter_scores.items() %}
+                                    <div class="col-6">
+                                        <small>{{ param.replace('_', ' ').title() }}: {{ score }}/100</small>
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar" style="width: {{ score }}%"></div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if ai_eval.get('feedback') %}
+                            <div class="mb-3">
+                                <strong>AI Feedback:</strong>
+                                <div class="small mt-1">
+                                    {% if ai_eval.feedback.get('strengths') %}
+                                    <div class="text-success mb-1">
+                                        <strong>Strengths:</strong> {{ ai_eval.feedback.strengths | join(', ') }}
+                                    </div>
+                                    {% endif %}
+                                    {% if ai_eval.feedback.get('areas_for_improvement') %}
+                                    <div class="text-warning mb-1">
+                                        <strong>Areas for Improvement:</strong> {{ ai_eval.feedback.areas_for_improvement | join(', ') }}
+                                    </div>
+                                    {% endif %}
+                                    {% if ai_eval.feedback.get('specific_comments') %}
+                                    <div class="text-muted">
+                                        <strong>Comments:</strong> {{ ai_eval.feedback.specific_comments }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>AI Recommendation:</strong>
+                                    {% set recommendation = ai_eval.get('recommended_action', 'review') %}
+                                    {% if recommendation == 'approve' %}
+                                        <span class="badge bg-success">{{ recommendation.title() }}</span>
+                                    {% elif recommendation == 'reject' %}
+                                        <span class="badge bg-danger">{{ recommendation.title() }}</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">{{ recommendation.replace('_', ' ').title() }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if ai_eval.get('bonus_eligible') %}
+                                <div>
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-star me-1"></i>Bonus Eligible
+                                    </span>
+                                                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <!-- Original Project Details -->
+                    {% if submission.projects %}
+                    <div class="alert alert-light">
+                        <h6>Original Project Requirements:</h6>
+                        <p class="small mb-2">{{ submission.projects.description[:200] }}...</p>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">Credits: {{ submission.projects.credits }}</small>
+                            {% if submission.projects.ai_evaluation %}
+                                {% set project_ai = submission.projects.ai_evaluation if submission.projects.ai_evaluation is mapping else (submission.projects.ai_evaluation | from_json) %}
+                                {% if project_ai and project_ai.get('feasibility', {}).get('difficulty_level') %}
+                                <small class="text-muted">Difficulty: {{ project_ai.feasibility.difficulty_level.title() }}</small>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Admin Review Form -->
+                    <form method="POST" action="{{ url_for('admin.approve_submission', submission_id=submission.id) }}">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="points_awarded_{{ submission.id }}" class="form-label">Points to Award</label>
+                                <input type="number" class="form-control" id="points_awarded_{{ submission.id }}"
+                                       name="points_awarded" min="0" max="200"
+                                       value="{{ submission.projects.credits if submission.projects else 10 }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Action</label>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                    <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                    <button type="submit" name="action" value="request_revision" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit me-1"></i>Request Revision
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="admin_feedback_{{ submission.id }}" class="form-label">Admin Feedback</label>
+                            <textarea class="form-control" id="admin_feedback_{{ submission.id }}" name="admin_feedback"
+                                      rows="3" placeholder="Provide feedback to the student..."></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-check-circle fa-4x text-success mb-4"></i>
+        <h4 class="text-muted">All Caught Up!</h4>
+        <p class="text-muted">There are no pending submissions to review at this time.</p>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Return to Dashboard
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Post New Idea{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white py-4">
+                <h3 class="mb-0 text-center">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Share Your Project Idea
+                </h3>
+                <p class="mb-0 text-center mt-2 opacity-75">
+                    Help students learn by sharing your creative project ideas
+                </p>
+            </div>
+            <div class="card-body p-5">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="title" class="form-label h5">Project Title</label>
+                        <input type="text" class="form-control form-control-lg" id="title" name="title" 
+                               placeholder="Enter a catchy title for your project idea" required>
+                        <div class="form-text">Make it engaging and descriptive</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="form-label h5">Project Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="6" 
+                                  placeholder="Describe your project idea in detail. What should students create or accomplish?" required></textarea>
+                        <div class="form-text">Be as detailed as possible - this helps our AI understand your vision</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="suggested_credits" class="form-label h5">Suggested Credits</label>
+                            <input type="number" class="form-control" id="suggested_credits" name="suggested_credits" 
+                                   min="1" max="100" value="10" required>
+                            <div class="form-text">How many points should students earn?</div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="target_age" class="form-label h5">Target Age Group</label>
+                            <select class="form-select" id="target_age" name="target_age" required>
+                                <option value="">Select age group</option>
+                                <option value="5-7">Ages 5-7 (K-2)</option>
+                                <option value="8-10">Ages 8-10 (3-5)</option>
+                                <option value="11-13">Ages 11-13 (6-8)</option>
+                                <option value="14-16">Ages 14-16 (9-11)</option>
+                                <option value="17-18">Ages 17-18 (12)</option>
+                            </select>
+                            <div class="form-text">Which students should work on this?</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>What happens next?</strong>
+                        <p class="mb-0 mt-2">Our AI assistant will ask you some questions to better understand your project and ensure it's suitable for students. This helps create clear evaluation criteria.</p>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-robot me-2"></i>
+                            Start AI Evaluation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

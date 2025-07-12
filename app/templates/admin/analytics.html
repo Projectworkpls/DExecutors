@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-chart-bar me-2 text-info"></i>
+                Analytics Dashboard
+            </h1>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ analytics.total_submissions }}</h4>
+                        <p class="card-text">Total Submissions</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clipboard-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ analytics.project_stats.get('completed', 0) }}</h4>
+                        <p class="card-text">Completed Projects</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ analytics.project_stats.get('in_progress', 0) + analytics.project_stats.get('claimed', 0) }}</h4>
+                        <p class="card-text">Active Projects</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cog fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ analytics.project_stats.get('approved', 0) }}</h4>
+                        <p class="card-text">Available Projects</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-star fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top Students -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Top Students by Points
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if analytics.top_students %}
+                    <div class="list-group list-group-flush">
+                        {% for student in analytics.top_students %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    {% if loop.index == 1 %}
+                                        <i class="fas fa-medal text-warning fa-lg"></i>
+                                    {% elif loop.index == 2 %}
+                                        <i class="fas fa-medal text-secondary fa-lg"></i>
+                                    {% elif loop.index == 3 %}
+                                        <i class="fas fa-medal text-danger fa-lg"></i>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ loop.index }}</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ student.full_name or 'Anonymous Student' }}</h6>
+                                    <small class="text-muted">Rank #{{ loop.index }}</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-warning text-dark fs-6">{{ student.points }} pts</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No student data available</h6>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Status Distribution -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Project Status Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if analytics.project_stats %}
+                    {% for status, count in analytics.project_stats.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                {% if status == 'completed' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% elif status == 'approved' %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif status == 'pending' %}
+                                    <i class="fas fa-clock text-primary"></i>
+                                {% elif status in ['claimed', 'in_progress'] %}
+                                    <i class="fas fa-cog text-info"></i>
+                                {% else %}
+                                    <i class="fas fa-times text-danger"></i>
+                                {% endif %}
+                            </div>
+                            <span class="fw-bold">{{ status.replace('_', ' ').title() }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">{{ count }}</span>
+                            <div class="progress" style="width: 100px;">
+                                <div class="progress-bar bg-{{ 'success' if status == 'completed' else 'warning' if status == 'approved' else 'primary' if status == 'pending' else 'info' }}"
+                                     style="width: {{ (count / analytics.project_stats.values()|sum * 100) if analytics.project_stats.values()|sum > 0 else 0 }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No project data available</h6>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Timeline -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Platform Activity Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h3 class="text-primary">{{ analytics.project_stats.values()|sum }}</h3>
+                            <p class="text-muted mb-0">Total Projects</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h3 class="text-success">{{ analytics.total_submissions }}</h3>
+                            <p class="text-muted mb-0">Total Submissions</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h3 class="text-warning">{{ analytics.top_students|length }}</h3>
+                            <p class="text-muted mb-0">Active Students</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-info">{{ ((analytics.project_stats.get('completed', 0) / analytics.project_stats.values()|sum) * 100)|round(1) if analytics.project_stats.values()|sum > 0 else 0 }}%</h3>
+                        <p class="text-muted mb-0">Completion Rate</p>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Platform Health:</strong>
+                    {% set completion_rate = ((analytics.project_stats.get('completed', 0) / analytics.project_stats.values()|sum) * 100) if analytics.project_stats.values()|sum > 0 else 0 %}
+                    {% if completion_rate >= 70 %}
+                        <span class="text-success">Excellent</span> - High project completion rate indicates strong student engagement.
+                    {% elif completion_rate >= 50 %}
+                        <span class="text-warning">Good</span> - Moderate completion rate with room for improvement.
+                    {% else %}
+                        <span class="text-danger">Needs Attention</span> - Low completion rate may indicate issues with project difficulty or student engagement.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

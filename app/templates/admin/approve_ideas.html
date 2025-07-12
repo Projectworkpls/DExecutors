@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Approve Project Ideas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-lightbulb me-2 text-warning"></i>
+                Approve Project Ideas
+            </h1>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if projects %}
+    <div class="row">
+        {% for project in projects %}
+        <div class="col-lg-6 mb-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">{{ project.title }}</h5>
+                    <small>
+                        <i class="fas fa-user me-1"></i>
+                        Submitted by Parent • {{ project.created_at.strftime('%B %d, %Y') if project.created_at else 'Recently' }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ project.description }}</p>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Suggested Credits:</strong>
+                            <span class="badge bg-success">{{ project.credits }}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Target Age:</strong>
+                            <span class="text-muted">{{ project.ai_evaluation.get('age_appropriateness', {}).get('recommended_age_range', 'Not specified') if project.ai_evaluation else 'Not specified' }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Evaluation Results -->
+                    {% if project.ai_evaluation %}
+                        {% set ai_eval = project.ai_evaluation if project.ai_evaluation is mapping else (project.ai_evaluation | from_json) %}
+                        {% if ai_eval %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-robot me-2"></i>
+                                AI Evaluation Results
+                            </h6>
+                            
+                            <div class="row g-3">
+                                {% if ai_eval.get('age_appropriateness') %}
+                                <div class="col-md-6">
+                                    <strong>Age Appropriateness:</strong>
+                                    <ul class="list-unstyled small mt-1">
+                                        <li><i class="fas fa-users me-1"></i> Age Range: {{ ai_eval.age_appropriateness.get('recommended_age_range', 'N/A') }}</li>
+                                        <li><i class="fas fa-signal me-1"></i> Complexity: {{ ai_eval.age_appropriateness.get('complexity_score', 'N/A') }}/10</li>
+                                    </ul>
+                                </div>
+                                {% endif %}
+                                
+                                {% if ai_eval.get('feasibility') %}
+                                <div class="col-md-6">
+                                    <strong>Feasibility:</strong>
+                                    <ul class="list-unstyled small mt-1">
+                                        <li><i class="fas fa-clock me-1"></i> Time: ~{{ ai_eval.feasibility.get('estimated_time_hours', 'N/A') }} hours</li>
+                                        <li><i class="fas fa-level-up-alt me-1"></i> Difficulty: {{ ai_eval.feasibility.get('difficulty_level', 'N/A').title() }}</li>
+                                        <li><i class="fas fa-star me-1"></i> Score: {{ ai_eval.feasibility.get('feasibility_score', 'N/A') }}/10</li>
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if ai_eval.get('recommended_credits') %}
+                            <div class="mt-2">
+                                <strong>AI Recommended Credits:</strong>
+                                {{ ai_eval.recommended_credits.get('min_credits', 0) }} - {{ ai_eval.recommended_credits.get('max_credits', 0) }} credits
+                            </div>
+                            {% endif %}
+                            
+                            {% if ai_eval.get('potential_challenges') %}
+                            <div class="mt-2">
+                                <strong>Potential Challenges:</strong>
+                                <ul class="small mb-0">
+                                    {% for challenge in ai_eval.potential_challenges %}
+                                    <li>{{ challenge }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <!-- Approval Form -->
+                    <form method="POST" action="{{ url_for('admin.approve_project', project_id=project.id) }}">
+                        <div class="mb-3">
+                            <label for="admin_notes_{{ project.id }}" class="form-label">Admin Notes (Optional)</label>
+                            <textarea class="form-control" id="admin_notes_{{ project.id }}" name="admin_notes" rows="2" 
+                                      placeholder="Add any notes or feedback..."></textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>
+                                Approve Project
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                <i class="fas fa-times me-2"></i>
+                                Reject Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-check-circle fa-4x text-success mb-4"></i>
+        <h4 class="text-muted">All Caught Up!</h4>
+        <p class="text-muted">There are no pending project ideas to review at this time.</p>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Return to Dashboard
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

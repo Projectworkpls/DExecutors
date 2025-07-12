@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                Parent Dashboard
+            </h1>
+            <a href="{{ url_for('parent.post_idea') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Post New Idea
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ pending_projects|length }}</h4>
+                        <p class="card-text">Pending Review</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ approved_projects|length }}</h4>
+                        <p class="card-text">Approved</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ in_progress_projects|length }}</h4>
+                        <p class="card-text">In Progress</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cog fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ completed_projects|length }}</h4>
+                        <p class="card-text">Completed</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-trophy fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Projects Tabs -->
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="projectTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+                    <i class="fas fa-clock me-2"></i>Pending Review
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button">
+                    <i class="fas fa-check-circle me-2"></i>Approved
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button">
+                    <i class="fas fa-cog me-2"></i>In Progress
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button">
+                    <i class="fas fa-trophy me-2"></i>Completed
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="projectTabsContent">
+            <!-- Pending Projects -->
+            <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                {% if pending_projects %}
+                    <div class="row">
+                        {% for project in pending_projects %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ project.title }}</h5>
+                                    <p class="card-text">{{ project.description[:100] }}...</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ project.created_at.strftime('%B %d, %Y') if project.created_at else 'N/A' }}
+                                        </small>
+                                        <span class="badge bg-warning">{{ project.credits }} Credits</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No pending projects</h5>
+                        <p class="text-muted">Your submitted ideas will appear here while awaiting admin approval.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Approved Projects -->
+            <div class="tab-pane fade" id="approved" role="tabpanel">
+                {% if approved_projects %}
+                    <div class="row">
+                        {% for project in approved_projects %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ project.title }}</h5>
+                                    <p class="card-text">{{ project.description[:100] }}...</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-check me-1"></i>
+                                            Approved {{ project.approved_at.strftime('%B %d, %Y') if project.approved_at else 'N/A' }}
+                                        </small>
+                                        <span class="badge bg-success">{{ project.credits }} Credits</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No approved projects</h5>
+                        <p class="text-muted">Approved projects waiting for students will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- In Progress Projects -->
+            <div class="tab-pane fade" id="progress" role="tabpanel">
+                {% if in_progress_projects %}
+                    <div class="row">
+                        {% for project in in_progress_projects %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ project.title }}</h5>
+                                    <p class="card-text">{{ project.description[:100] }}...</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>
+                                            Claimed by student
+                                        </small>
+                                        <span class="badge bg-info">{{ project.credits }} Credits</span>
+                                    </div>
+                                    {% if project.due_date %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            Due: {{ project.due_date.strftime('%B %d, %Y') }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-cog fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No projects in progress</h5>
+                        <p class="text-muted">Projects being worked on by students will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Completed Projects -->
+            <div class="tab-pane fade" id="completed" role="tabpanel">
+                {% if completed_projects %}
+                    <div class="row">
+                        {% for project in completed_projects %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ project.title }}</h5>
+                                    <p class="card-text">{{ project.description[:100] }}...</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-success">
+                                            <i class="fas fa-trophy me-1"></i>
+                                            Completed successfully
+                                        </small>
+                                        <span class="badge bg-primary">{{ project.credits }} Credits</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No completed projects</h5>
+                        <p class="text-muted">Successfully completed projects will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

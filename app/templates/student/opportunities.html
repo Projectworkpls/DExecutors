@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Opportunities{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-search me-2 text-primary"></i>
+                Browse Opportunities
+            </h1>
+            <div class="d-flex align-items-center">
+                <span class="me-3">
+                    <i class="fas fa-star text-warning me-1"></i>
+                    <span class="badge bg-warning text-dark">{{ current_user.points }} Points</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search Projects</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="Search by title or description...">
+            </div>
+            <div class="col-md-3">
+                <label for="grade" class="form-label">Grade Level</label>
+                <select class="form-select" id="grade" name="grade">
+                    <option value="">All Grades</option>
+                    <option value="K" {{ 'selected' if grade_filter == 'K' }}>Kindergarten</option>
+                    <option value="1" {{ 'selected' if grade_filter == '1' }}>Grade 1</option>
+                    <option value="2" {{ 'selected' if grade_filter == '2' }}>Grade 2</option>
+                    <option value="3" {{ 'selected' if grade_filter == '3' }}>Grade 3</option>
+                    <option value="4" {{ 'selected' if grade_filter == '4' }}>Grade 4</option>
+                    <option value="5" {{ 'selected' if grade_filter == '5' }}>Grade 5</option>
+                    <option value="6" {{ 'selected' if grade_filter == '6' }}>Grade 6</option>
+                    <option value="7" {{ 'selected' if grade_filter == '7' }}>Grade 7</option>
+                    <option value="8" {{ 'selected' if grade_filter == '8' }}>Grade 8</option>
+                    <option value="9" {{ 'selected' if grade_filter == '9' }}>Grade 9</option>
+                    <option value="10" {{ 'selected' if grade_filter == '10' }}>Grade 10</option>
+                    <option value="11" {{ 'selected' if grade_filter == '11' }}>Grade 11</option>
+                    <option value="12" {{ 'selected' if grade_filter == '12' }}>Grade 12</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Sort By</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="created_at" {{ 'selected' if sort_by == 'created_at' }}>Newest First</option>
+                    <option value="credits" {{ 'selected' if sort_by == 'credits' }}>Highest Credits</option>
+                    <option value="title" {{ 'selected' if sort_by == 'title' }}>Title A-Z</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Projects Grid -->
+<div class="row">
+    {% if projects %}
+        {% for project in projects %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title mb-0 text-primary">{{ project.title }}</h5>
+                        <span class="badge bg-success fs-6">{{ project.credits }} Credits</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">{{ project.description[:150] }}{% if project.description|length > 150 %}...{% endif %}</p>
+                    
+                    <!-- AI Evaluation Info -->
+                    {% if project.ai_evaluation %}
+                        {% set ai_eval = project.ai_evaluation if project.ai_evaluation is mapping else (project.ai_evaluation | from_json) %}
+                        {% if ai_eval %}
+                        <div class="mb-3">
+                            <div class="row g-2">
+                                {% if ai_eval.get('age_appropriateness', {}).get('recommended_age_range') %}
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-users me-1"></i>
+                                        Age: {{ ai_eval.age_appropriateness.recommended_age_range }}
+                                    </small>
+                                </div>
+                                {% endif %}
+                                {% if ai_eval.get('feasibility', {}).get('estimated_time_hours') %}
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        ~{{ ai_eval.feasibility.estimated_time_hours }}h
+                                    </small>
+                                </div>
+                                {% endif %}
+                                {% if ai_eval.get('feasibility', {}).get('difficulty_level') %}
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-signal me-1"></i>
+                                        {{ ai_eval.feasibility.difficulty_level.title() }}
+                                    </small>
+                                </div>
+                                {% endif %}
+                                {% if ai_eval.get('age_appropriateness', {}).get('complexity_score') %}
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-star me-1"></i>
+                                        {{ ai_eval.age_appropriateness.complexity_score }}/10
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Posted {{ project.created_at.strftime('%b %d') if project.created_at else 'Recently' }}
+                        </small>
+                        
+                        <form method="POST" action="{{ url_for('student.claim_project', project_id=project.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-hand-paper me-1"></i>
+                                Claim Project
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">No projects found</h4>
+                <p class="text-muted">Try adjusting your search criteria or check back later for new opportunities.</p>
+                <a href="{{ url_for('student.opportunities') }}" class="btn btn-primary">
+                    <i class="fas fa-refresh me-2"></i>
+                    Clear Filters
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pagination (if needed) -->
+{% if projects|length >= 20 %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="Projects pagination">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <span class="page-link">Previous</span>
+                </li>
+                <li class="page-item active">
+                    <span class="page-link">1</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-submit form when filters change
+document.getElementById('grade').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.getElementById('sort').addEventListener('change', function() {
+    this.form.submit();
+});
+</script>
+{% endblock %}
