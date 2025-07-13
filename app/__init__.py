@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, send_from_directory, jsonify
 from flask_login import LoginManager
 from app.config import Config
 import os
+from flask import render_template
 
 login_manager = LoginManager()
 
@@ -48,9 +49,11 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
     # Main route
+
     @app.route('/')
     def index():
-        return redirect(url_for('auth.login'))
+        return render_template('index.html')
+
 
     # Favicon route - return empty response to prevent 404s
     @app.route('/favicon.ico')

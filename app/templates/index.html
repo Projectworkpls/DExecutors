@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>DExecutors</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #1e40af;
+      --bg: #f8fafc;
+      --white: #fff;
+      --gray: #e5e7eb;
+      --text: #1e293b;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --shadow: 0 4px 24px #e0e7ef55;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(90deg, var(--primary) 60%, var(--accent) 100%);
+      color: var(--white);
+      padding: 2.2rem 1rem 2rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 8px #dbeafe;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+    header p {
+      margin: 0;
+      font-size: 1.15rem;
+      opacity: 0.98;
+      font-weight: 400;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      background: var(--secondary);
+      padding: 0.8rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    nav .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+    nav a {
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.4rem 1.2rem;
+      border-radius: 6px;
+      font-size: 1.05rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    nav a:hover, nav a.active {
+      background: var(--accent);
+      color: var(--secondary);
+    }
+    .login-btn {
+      margin-left: 2rem;
+      background: var(--white);
+      color: var(--primary);
+      border: none;
+      font-weight: 600;
+      padding: 0.4rem 1.3rem;
+      border-radius: 6px;
+      font-size: 1.05rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #dbeafe55;
+      transition: background 0.2s, color 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .login-btn:hover {
+      background: var(--accent);
+      color: var(--secondary);
+    }
+    .hero {
+      background: var(--white);
+      margin: 2.5rem auto 2rem auto;
+      max-width: 900px;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 2.3rem 2rem 2rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hero h2 {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.7rem;
+      font-weight: 700;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 1.4rem;
+      max-width: 650px;
+    }
+    .hero .cta-btn {
+      background: var(--primary);
+      color: var(--white);
+      font-size: 1.08rem;
+      font-weight: 600;
+      padding: 0.8rem 2.1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #dbeafe88;
+      transition: background 0.18s, transform 0.18s;
+    }
+    .hero .cta-btn:hover {
+      background: var(--accent);
+      color: var(--secondary);
+      transform: translateY(-2px) scale(1.03);
+    }
+    .section {
+      width: 95vw;
+      max-width: 1600px;
+      margin: 2.5rem auto;
+      padding: 2.2rem 2rem;
+      background: var(--white);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .section-title {
+      color: var(--primary);
+      margin-top: 0;
+      margin-bottom: 1.1rem;
+      font-size: 1.4rem;
+      border-left: 4px solid var(--accent);
+      padding-left: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 2rem;
+      margin: 0 0 1.5rem 0;
+    }
+    .stat-card {
+      background: var(--bg);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #e0e7ef33;
+      padding: 1.2rem 1.5rem;
+      text-align: center;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .stat-card:hover {
+      box-shadow: 0 6px 24px #dbeafe99;
+      transform: translateY(-3px) scale(1.03);
+    }
+    .stat-card h3 {
+      font-size: 2.1rem;
+      color: var(--primary);
+      margin: 0 0 0.4rem 0;
+      font-weight: 700;
+    }
+    .stat-card p {
+      font-size: 1.05rem;
+      color: var(--secondary);
+      margin: 0;
+      font-weight: 500;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin: 0 0 2rem 0;
+    }
+    .feature-card {
+      background: var(--bg);
+      border-left: 5px solid var(--primary);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px #e0e7ef33;
+      padding: 1.1rem 1.2rem 1.1rem 1.5rem;
+      font-size: 1.05rem;
+      font-weight: 500;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      box-shadow: 0 6px 24px #dbeafe99;
+      transform: translateY(-2px) scale(1.02);
+    }
+    .milestones-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      margin: 1.5rem 0 2rem 0;
+    }
+    .milestone-card {
+      background: var(--gray);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      min-width: 200px;
+      flex: 1 1 180px;
+      font-size: 1.01rem;
+      color: var(--secondary);
+      font-weight: 500;
+      box-shadow: 0 1px 4px #e0e7ef33;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .milestone-card:hover {
+      box-shadow: 0 6px 24px #bae6fd99;
+      transform: translateY(-2px) scale(1.02);
+    }
+    .leaderboard-section {
+      margin: 2.5rem 0 2rem 0;
+      width: 100vw;
+      max-width: 100vw;
+      left: 50%;
+      right: 50%;
+      position: relative;
+      transform: translateX(-50%);
+      background: var(--white);
+      padding: 2.5rem 0;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .leaderboard-title {
+      color: var(--primary);
+      margin-bottom: 1.1rem;
+      font-size: 1.4rem;
+      border-left: 4px solid var(--accent);
+      padding-left: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-align: center;
+      max-width: 1600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .leaderboard-table-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    .leaderboard-table {
+      width: 90vw;
+      max-width: 1200px;
+      border-collapse: separate;
+      border-spacing: 0 0.5rem;
+      margin-bottom: 1.2rem;
+      background: var(--bg);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px #e0e7ef33;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 0.8rem 1rem;
+      text-align: left;
+    }
+    .leaderboard-table th {
+      background: var(--primary);
+      color: var(--white);
+      font-weight: 600;
+      border: none;
+    }
+    .leaderboard-table tr {
+      background: var(--white);
+      border-radius: 6px;
+      box-shadow: 0 1px 4px #e0e7ef15;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .leaderboard-table tr:hover {
+      box-shadow: 0 6px 24px #dbeafe99;
+      transform: translateY(-1px) scale(1.01);
+    }
+    .leaderboard-table td.rank {
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .leaderboard-table td.xp {
+      color: var(--success);
+      font-weight: 600;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin: 2.5rem 0 2rem 0;
+    }
+    .testimonial-card {
+      background: var(--bg);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px #e0e7ef33;
+      padding: 1.3rem 1.3rem 1.1rem 1.3rem;
+      font-size: 1.04rem;
+      color: var(--text);
+      font-weight: 400;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .testimonial-card:hover {
+      box-shadow: 0 6px 24px #bae6fd99;
+      transform: translateY(-2px) scale(1.02);
+    }
+    .testimonial-author {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 1rem;
+      margin-top: 0.8rem;
+      text-align: right;
+    }
+    .cta {
+      background: var(--accent);
+      color: var(--secondary);
+      padding: 1.2rem 2rem;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      text-align: center;
+      margin: 2.5rem 0 0 0;
+      font-weight: 600;
+      box-shadow: 0 2px 8px #bae6fd88;
+    }
+    footer {
+      background: var(--gray);
+      padding: 2rem 0 1rem 0;
+      text-align: center;
+      color: #64748b;
+      font-size: 1rem;
+      margin-top: 3rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    @media (max-width: 900px) {
+      .section, .hero { padding-left: 1rem; padding-right: 1rem; }
+      .section { max-width: 100%; }
+      nav .nav-links { gap: 1rem; }
+      .leaderboard-table { width: 98vw; }
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 2rem; }
+      .hero h2 { font-size: 1.2rem; }
+      .section { padding: 1rem; }
+      .leaderboard-table th, .leaderboard-table td { font-size: 0.95rem; padding: 0.6rem 0.5rem; }
+      nav { flex-direction: column; gap: 1rem; }
+      nav .nav-links { flex-direction: column; gap: 0.2rem; }
+      .login-btn { margin-left: 0; margin-top: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DExecutors</h1>
+    <p>🌟 Where parents post real-world ideas for students to complete and earn credits, skills, and recognition!</p>
+  </header>
+  <nav>
+    <div class="nav-links">
+      <a href="#" class="active">Home</a>
+      <a href="#">Projects</a>
+      <a href="#">Leaderboard</a>
+      <a href="#">Dispute Jury</a>
+      <a href="#">Profile</a>
+    </div>
+    <a class="login-btn" href="/auth/login">Login</a>
+    <!-- For Flask/Jinja2, use: href="{{ url_for('auth.login') }}" -->
+  </nav>
+
+  <section class="hero">
+    <h2>Connecting Parents' Ideas with Students' Talent</h2>
+    <p>
+      <b>DExecutors</b> is a unique platform where parents and mentors post real challenges, and students from around the world collaborate to solve them, earn credits, and build their reputation.<br>
+      <span style="color:var(--primary);font-weight:600;">Every project is a new opportunity to learn, earn, and shine!</span>
+    </p>
+    <button class="cta-btn">Get Started</button>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Platform Stats</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>2,400+</h3>
+        <p>Ideas Funded</p>
+      </div>
+      <div class="stat-card">
+        <h3>6,100+</h3>
+        <p>Executors Worldwide</p>
+      </div>
+      <div class="stat-card">
+        <h3>₹1.2Cr+</h3>
+        <p>Funds Disbursed</p>
+      </div>
+      <div class="stat-card">
+        <h3>4.9★</h3>
+        <p>Avg. Project Rating</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Concept Snapshot</div>
+    <div class="features-grid">
+      <div class="feature-card"><b>Parents/Mentors</b> post real-world ideas + budgets (₹5000 max at Level 1)</div>
+      <div class="feature-card"><b>AI</b> evaluates feasibility, budget, deadline, and breaks it into smart milestones</div>
+      <div class="feature-card"><b>Students</b> apply to complete the challenge</div>
+      <div class="feature-card"><b>Reputation XP</b> grows for both sides on completion</div>
+      <div class="feature-card"><b>Escrow system</b> holds the funds</div>
+      <div class="feature-card">Platform takes a <b>20% fee</b> per completed project</div>
+    </div>
+    <div class="section-title" style="margin-top:2.5rem;">Example AI-Generated Milestones</div>
+    <div class="milestones-list">
+      <div class="milestone-card">Idea Feasibility Review & Budget Validation</div>
+      <div class="milestone-card">Milestone 1: Initial Prototype Submission</div>
+      <div class="milestone-card">Milestone 2: User Feedback & Iteration</div>
+      <div class="milestone-card">Milestone 3: Final Delivery & QA</div>
+      <div class="milestone-card">Escrow Release & XP Award</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Key Features</div>
+    <div class="features-grid">
+      <div class="feature-card">AI-powered idea refinement & milestone generator</div>
+      <div class="feature-card">User Level & XP System</div>
+      <div class="feature-card">Project Listing + Application Flow (Apply → Bid → Team Collaborate)</div>
+      <div class="feature-card">Escrow & Secure Payments</div>
+      <div class="feature-card">Gamified Dashboard with Leaderboard (Badges, Levels, Leaderboards)</div>
+      <div class="feature-card">Dispute Jury Section (community-based resolution)</div>
+      <div class="feature-card">Global Expansion Ready (multi-currency, multi-language)</div>
+    </div>
+  </section>
+
+  <section class="leaderboard-section">
+    <div class="leaderboard-title">Leaderboard</div>
+    <div class="leaderboard-table-container">
+      <table class="leaderboard-table">
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Level</th>
+          <th>XP</th>
+          <th>Projects Completed</th>
+        </tr>
+        <tr>
+          <td class="rank">1</td>
+          <td>Priya S.</td>
+          <td>7</td>
+          <td class="xp">12,800</td>
+          <td>34</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td>Arjun P.</td>
+          <td>6</td>
+          <td class="xp">10,200</td>
+          <td>29</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td>Fatima R.</td>
+          <td>6</td>
+          <td class="xp">9,750</td>
+          <td>26</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td>Chen L.</td>
+          <td>5</td>
+          <td class="xp">8,600</td>
+          <td>22</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td>David M.</td>
+          <td>5</td>
+          <td class="xp">7,900</td>
+          <td>21</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">What Our Users Say</div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div>“DExecutors helped me turn my college project idea into a real-world product. The AI milestones kept me on track, and the escrow made payment super safe!”</div>
+        <div class="testimonial-author">— Ananya, Student</div>
+      </div>
+      <div class="testimonial-card">
+        <div>“I love the XP system! It’s motivating and helps me stand out as a reliable executor. The platform is fun and professional.”</div>
+        <div class="testimonial-author">— Vivek, Freelancer</div>
+      </div>
+      <div class="testimonial-card">
+        <div>“The Dispute Jury is a game-changer. Community-based resolution means everyone feels heard and treated fairly.”</div>
+        <div class="testimonial-author">— Maria, Creator</div>
+      </div>
+    </div>
+    <div class="cta">
+      ❤️ Join a global-first impact platform.<br>
+      Shape a real trust economy through execution.<br>
+      <br>
+      <b>Interested?</b> DM with your background, skills, and one crazy idea for DExecutors!
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 DExecutors. All rights reserved. | Built for innovators, by innovators.
+  </footer>
+</body>
+</html>
