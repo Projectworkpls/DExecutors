@@ -43,14 +43,14 @@ class GeminiService:
 
             # Use Gemini 2.0 Flash (free tier)
             self.model = genai.GenerativeModel(
-                model_name="gemini-2.0-flash-exp",
+                model_name="gemini-2.0-flash",
                 generation_config=self.generation_config,
                 safety_settings=self.safety_settings
             )
 
             # For vision tasks, use the same model (2.0 Flash supports vision)
             self.vision_model = genai.GenerativeModel(
-                model_name="gemini-2.0-flash-exp",
+                model_name="gemini-2.0-flash",
                 generation_config=self.generation_config,
                 safety_settings=self.safety_settings
             )
@@ -68,7 +68,7 @@ class GeminiService:
             try:
                 genai.configure(api_key=self._api_key)
                 self.model = genai.GenerativeModel(
-                    model_name="gemini-2.0-flash-exp",
+                    model_name="gemini-2.0-flash",
                     generation_config=self.generation_config,
                     safety_settings=self.safety_settings
                 )

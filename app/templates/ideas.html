@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Browse Ideas – DExecutors</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; margin: 0; }
+    .container { max-width: 1000px; margin: 3rem auto; background: #fff; border-radius: 14px; box-shadow: 0 2px 16px #e0e7ef33; padding: 2.5rem 2rem; }
+    h1 { color: #2563eb; margin-bottom: 1.5rem; font-size: 2.1rem; }
+    .ideas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1.5rem; }
+    .idea-card { background: #f1f5fb; border-left: 4px solid #2563eb; border-radius: 8px; padding: 1rem 1.2rem 1rem 1.4rem; min-height: 120px; display: flex; flex-direction: column; }
+    .idea-card h3 { margin: 0 0 0.5rem 0; color: #2563eb; font-size: 1.13rem; }
+    .idea-card p { margin: 0 0 0.6rem 0; color: #1e293b; font-size: 1rem; }
+    .idea-card .credits { font-size: 0.98rem; color: #1e40af; margin-bottom: 0.2rem; }
+    .idea-card a { color: #38bdf8; text-decoration: underline; font-weight: 500; margin-top: 0.6rem; font-size: 1rem; }
+    .no-ideas { text-align: center; color: #64748b; margin: 2.5rem 0; font-size: 1.2rem; }
+    .actions { margin-top: 2.5rem; text-align: center; }
+    .btn { display: inline-block; margin: 0.4rem 1rem; padding: 0.7rem 2rem; border: none; border-radius: 7px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.18s; text-decoration: none; }
+    .btn-login { background: #2563eb; color: #fff; }
+    .btn-login:hover { background: #38bdf8; color: #1e40af; }
+    .btn-back { background: #e5e7eb; color: #1e293b; }
+    .btn-back:hover { background: #2563eb; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Open Ideas</h1>
+    {% if ideas and ideas|length > 0 %}
+      <div class="ideas-grid">
+        {% for idea in ideas %}
+          <div class="idea-card">
+            <h3><a href="{{ url_for('ideas.idea_detail', project_id=idea.id) }}">{{ idea.title }}</a></h3>
+            <p>{{ idea.description[:90] }}{% if idea.description|length > 90 %}...{% endif %}</p>
+            <div class="credits">Credits: {{ idea.credits or 10 }}</div>
+            <a href="{{ url_for('ideas.idea_detail', project_id=idea.id) }}">View Details</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="no-ideas">
+        No ideas are open right now.<br>
+        {% if not current_user.is_authenticated %}
+          <div class="actions">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-login">Login</a>
+            <a href="{{ url_for('index') }}" class="btn btn-back">Go Back to Dashboard</a>
+          </div>
+        {% else %}
+          <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn btn-back">Go Back to Dashboard</a>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ project.title }} – Idea Details</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; margin: 0; }
+    .container { max-width: 700px; margin: 3rem auto; background: #fff; border-radius: 14px; box-shadow: 0 2px 16px #e0e7ef33; padding: 2.5rem 2rem; }
+    h1 { color: #2563eb; margin-bottom: 1.2rem; font-size: 2rem; }
+    .meta { color: #64748b; font-size: 1.05rem; margin-bottom: 1.2rem; }
+    .credits { color: #1e40af; font-weight: 600; margin-right: 1.5rem; }
+    .target-age { color: #38bdf8; font-weight: 600; }
+    .desc { font-size: 1.13rem; color: #1e293b; margin-bottom: 2rem; }
+    .actions { margin-top: 2.5rem; text-align: center; }
+    .btn { display: inline-block; margin: 0.4rem 1rem; padding: 0.7rem 2rem; border: none; border-radius: 7px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.18s; text-decoration: none; }
+    .btn-login { background: #2563eb; color: #fff; }
+    .btn-login:hover { background: #38bdf8; color: #1e40af; }
+    .btn-back { background: #e5e7eb; color: #1e293b; }
+    .btn-back:hover { background: #2563eb; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>{{ project.title }}</h1>
+    <div class="meta">
+      <span class="credits">Credits: {{ project.credits or 10 }}</span>
+      <span class="target-age">Target Age: {{ project.target_age or 'N/A' }}</span>
+    </div>
+    <div class="desc">{{ project.description }}</div>
+    <div class="actions">
+      {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-login">Login to Participate</a>
+      {% else %}
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-login">Go to Student Dashboard</a>
+      {% endif %}
+      <a href="{{ url_for('ideas.ideas') }}" class="btn btn-back">Back to Ideas</a>
+    </div>
+  </div>
+</body>
+</html>

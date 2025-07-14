@@ -42,17 +42,20 @@ def create_app():
     from app.routes.parent import parent_bp
     from app.routes.student import student_bp
     from app.routes.admin import admin_bp
+    from app.routes.ideas import ideas_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(parent_bp, url_prefix='/parent')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(ideas_bp)
 
     # Main route
 
     @app.route('/')
     def index():
-        return render_template('index.html')
+        projects = app.supabase_service.get_projects_by_status('approved')
+        return render_template('index.html', ideas=projects[:6])  # Show latest 6 ideas on homepage
 
 
     # Favicon route - return empty response to prevent 404s
@@ -65,6 +68,7 @@ def create_app():
     def uploaded_file(filename):
         upload_dir = os.path.join(app.root_path, 'uploads')
         return send_from_directory(upload_dir, filename)
+
 
     # Simple error handlers that don't rely on templates
     @app.errorhandler(404)

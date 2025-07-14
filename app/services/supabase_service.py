@@ -146,13 +146,18 @@ class SupabaseService:
 
     # Project operations
     def create_project(self, project_data):
-        """Create a new project"""
+        """Create project using service role to bypass RLS"""
         try:
-            client = self.get_client()
-            if client is None:
-                return None
+            # Use service role key for admin operations
+            service_key = current_app.config.get('SUPABASE_SERVICE_KEY')
+            if service_key:
+                service_client = create_client(self._url, service_key)
+                response = service_client.table('projects').insert(project_data).execute()
+            else:
+                # Fallback to regular client
+                client = self.get_client()
+                response = client.table('projects').insert(project_data).execute()
 
-            response = client.table('projects').insert(project_data).execute()
             return response.data[0] if response.data else None
         except Exception as e:
             print(f"Error creating project: {e}")
@@ -216,30 +221,74 @@ class SupabaseService:
             return None
 
     def get_submissions_by_student(self, student_id):
-        """Get submissions by student ID"""
+        """Get submissions by student with proper relationship handling"""
         try:
             client = self.get_client()
             if client is None:
                 return []
 
-            response = client.table('submissions').select('*, projects(*)').eq('student_id', student_id).execute()
-            return response.data
+            # Use explicit relationship name to avoid ambiguity
+            response = client.table('submissions').select(
+                '*, projects!submissions_project_id_fkey(*)'
+            ).eq('student_id', student_id).execute()
+
+            return response.data if response.data else []
         except Exception as e:
             print(f"Error fetching submissions: {e}")
             return []
 
+    def create_submission(self, submission_data):
+        """Create a new submission with proper error handling"""
+        try:
+            client = self.get_client()
+            if client is None:
+                print("Error: Supabase client is None")
+                return None
+
+            print(
+                f"Creating submission for project {submission_data.get('project_id')} by student {submission_data.get('student_id')}")
+
+            # Ensure required fields are present
+            required_fields = ['project_id', 'student_id', 'status']
+            for field in required_fields:
+                if field not in submission_data:
+                    print(f"Missing required field: {field}")
+                    return None
+
+            response = client.table('submissions').insert(submission_data).execute()
+
+            if response.data:
+                print(f"Submission created successfully: {response.data[0]['id']}")
+                return response.data[0]
+            else:
+                print("No data returned from submission creation")
+                return None
+
+        except Exception as e:
+            print(f"Error creating submission: {e}")
+            return None
+
     def get_pending_submissions(self):
-        """Get pending submissions"""
+        """
+        Get all submissions awaiting admin review (status 'pending' or 'submitted'),
+        including related project and user information.
+        """
         try:
             client = self.get_client()
             if client is None:
                 return []
 
-            response = client.table('submissions').select('*, projects(*), users(*)').eq('status', 'pending').execute()
-            return response.data
+            response = client.table('submissions').select(
+                '*, projects!submissions_project_id_fkey(*), users!submissions_student_id_fkey(*)'
+            ).in_('status', ['pending', 'submitted','under_review']).execute()
+
+            return response.data if response.data else []
         except Exception as e:
             print(f"Error fetching pending submissions: {e}")
             return []
+
+
+
 
     def update_submission_status(self, submission_id, status, admin_feedback=None):
         """Update submission status"""

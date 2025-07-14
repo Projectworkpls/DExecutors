@@ -95,8 +95,10 @@ def opportunities():
 @role_required('student')
 def claim_project(project_id):
     try:
+        supabase_service = current_app.supabase_service
+
         # Check if project exists and is available
-        response = current_app.supabase_service.get_client().table('projects').select('*').eq('id', project_id).eq('status',
+        response = supabase_service.get_client().table('projects').select('*').eq('id', project_id).eq('status',
                                                                                                        'approved').execute()
 
         if not response.data:
@@ -106,7 +108,7 @@ def claim_project(project_id):
         project_data = response.data[0]
 
         # Check if student already claimed this project
-        existing_submission = current_app.supabase_service.get_client().table('submissions').select('*').eq('project_id',
+        existing_submission = supabase_service.get_client().table('submissions').select('*').eq('project_id',
                                                                                                 project_id).eq(
             'student_id', current_user.id).execute()
 
@@ -114,19 +116,22 @@ def claim_project(project_id):
             flash('You have already claimed this project.', 'warning')
             return redirect(url_for('student.opportunities'))
 
-        # Create submission record
+        # Create submission record with all required fields
         submission_data = {
             'project_id': project_id,
             'student_id': current_user.id,
             'status': 'claimed',
-            'submitted_at': datetime.utcnow().isoformat()
+            'description': '',  # Empty initially
+            'submission_type': 'text',  # Default type
+            'submitted_at': datetime.utcnow().isoformat(),
+            'points_awarded': 0
         }
 
-        submission = current_app.supabase_service.create_submission(submission_data)
+        submission = supabase_service.create_submission(submission_data)
 
         if submission:
             # Update project status
-            current_app.supabase_service.update_project_status(project_id, 'claimed', {
+            supabase_service.update_project_status(project_id, 'claimed', {
                 'claimed_by': current_user.id,
                 'claimed_at': datetime.utcnow().isoformat()
             })
@@ -136,6 +141,7 @@ def claim_project(project_id):
             flash('Failed to claim project. Please try again.', 'error')
 
     except Exception as e:
+        print(f"Error in claim_project: {e}")
         flash('An error occurred while claiming the project.', 'error')
 
     return redirect(url_for('student.opportunities'))
@@ -233,4 +239,12 @@ def submit_project():
 @role_required('student')
 def my_submissions():
     submissions = current_app.supabase_service.get_submissions_by_student(current_user.id)
+    # Convert submitted_at from string to datetime
+    for s in submissions:
+        if isinstance(s.get('submitted_at'), str):
+            try:
+                # Handles ISO format with or without 'Z'
+                s['submitted_at'] = datetime.fromisoformat(s['submitted_at'].replace('Z', '+00:00'))
+            except Exception:
+                s['submitted_at'] = None
     return render_template('student/my_submissions.html', submissions=submissions)
