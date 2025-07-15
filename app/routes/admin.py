@@ -13,11 +13,16 @@ admin_bp = Blueprint('admin', __name__)
 @login_required
 @role_required('admin')
 def dashboard():
-    # Get pending projects and submissions
     pending_projects = current_app.supabase_service.get_projects_by_status('pending')
     pending_submissions = current_app.supabase_service.get_pending_submissions()
 
-    # Get statistics
+    for submission in pending_submissions:
+        if submission.get('submitted_at') and isinstance(submission['submitted_at'], str):
+            try:
+                submission['submitted_at'] = datetime.fromisoformat(submission['submitted_at'].replace('Z', '+00:00'))
+            except Exception:
+                submission['submitted_at'] = None
+
     stats = {
         'total_projects': len(current_app.supabase_service.get_client().table('projects').select('id').execute().data),
         'total_students': len(
@@ -82,90 +87,125 @@ def approve_project(project_id):
 @role_required('admin')
 def approve_submissions():
     pending_submissions = current_app.supabase_service.get_pending_submissions()
-    return render_template('admin/approve_submissions.html', submissions=pending_submissions)
 
+    for submission in pending_submissions:
+        if submission.get('submitted_at') and isinstance(submission['submitted_at'], str):
+            try:
+                submission['submitted_at'] = datetime.fromisoformat(submission['submitted_at'].replace('Z', '+00:00'))
+            except Exception:
+                submission['submitted_at'] = None
+
+    return render_template('admin/approve_submissions.html', submissions=pending_submissions)
 
 @admin_bp.route('/approve-submission/<int:submission_id>', methods=['POST'])
 @login_required
 @role_required('admin')
 def approve_submission(submission_id):
-    action = request.form.get('action')  # approve, reject, or request_revision
+    action = request.form.get('action')  # approve, reject, request_revision
     admin_feedback = request.form.get('admin_feedback', '')
     points_awarded = int(request.form.get('points_awarded', 0))
 
     try:
-        # Get submission details
-        submission_response = current_app.supabase_service.get_client().table('submissions').select('*, projects(*)').eq('id',
-                                                                                                             submission_id).execute()
+        # -- Fetch submission with related project data
+        submission_response = current_app.supabase_service.get_client().table('submissions') \
+            .select('*, projects(*)') \
+            .eq('id', submission_id).execute()
 
         if not submission_response.data:
             flash('Submission not found.', 'error')
             return redirect(url_for('admin.approve_submissions'))
 
         submission_data = submission_response.data[0]
-        project_data = submission_data['projects']
+        project_data = submission_data.get('projects', {})
 
+        # ========= APPROVE =========
         if action == 'approve':
-            # Update submission
-            result = current_app.supabase_service.update_submission_status(submission_id, 'approved', admin_feedback)
+            result = current_app.supabase_service.update_submission_status(
+                submission_id, 'approved', admin_feedback
+            )
 
             if result:
-                # Update project status to completed
+                # -- Mark project completed
                 current_app.supabase_service.update_project_status(project_data['id'], 'completed')
 
-                # Award points to student
-                current_points_response = current_app.supabase_service.get_client().table('users').select('points').eq('id',
-                                                                                                           submission_data[
-                                                                                                               'student_id']).execute()
-                current_points = current_points_response.data[0]['points'] if current_points_response.data else 0
+                # -- Reward points to student
+                user_response = current_app.supabase_service.get_client().table('users') \
+                    .select('points') \
+                    .eq('id', submission_data['student_id']) \
+                    .execute()
 
+                current_points = user_response.data[0]['points'] if user_response.data else 0
                 new_points = current_points + points_awarded
-                current_app.supabase_service.get_client().table('users').update({'points': new_points}).eq('id', submission_data[
-                    'student_id']).execute()
 
-                # Update submission with points
-                current_app.supabase_service.get_client().table('submissions').update({'points_awarded': points_awarded}).eq('id',
-                                                                                                                 submission_id).execute()
+                current_app.supabase_service.get_client().table('users') \
+                    .update({'points': new_points}) \
+                    .eq('id', submission_data['student_id']) \
+                    .execute()
+
+                # -- Log awarded points
+                current_app.supabase_service.get_client().table('submissions') \
+                    .update({'points_awarded': points_awarded}) \
+                    .eq('id', submission_id) \
+                    .execute()
 
                 flash(f'Submission approved! {points_awarded} points awarded to student.', 'success')
             else:
                 flash('Failed to approve submission.', 'error')
 
+        # ========= REJECT =========
         elif action == 'reject':
-            result = current_app.supabase_service.update_submission_status(submission_id, 'rejected', admin_feedback)
+            print(f"👉 Rejecting submission {submission_id}")
+
+            result = current_app.supabase_service.update_submission_status(
+                submission_id, 'resubmission_required', admin_feedback
+            )
+
+            print("🔥 update_submission_status result:", result)
 
             if result:
-                # Reset project status to approved so other students can claim it
-                current_app.supabase_service.update_project_status(project_data['id'], 'approved', {
-                    'claimed_by': None,
-                    'claimed_at': None
-                })
-
-                flash('Submission rejected. Project is now available for other students.', 'info')
+                flash('Submission rejected and sent back to student for resubmission.', 'info')
             else:
                 flash('Failed to reject submission.', 'error')
 
+        # ========= REQUEST REVISION =========
         elif action == 'request_revision':
-            result = current_app.supabase_service.update_submission_status(submission_id, 'revision_requested', admin_feedback)
+            print(f"📝 Requesting revision for submission {submission_id}")
+
+            result = current_app.supabase_service.update_submission_status(
+                submission_id, 'revision_requested', admin_feedback
+            )
+
+            print("🔥 update_submission_status result:", result)
 
             if result:
                 flash('Revision requested. Student will be notified.', 'info')
             else:
                 flash('Failed to request revision.', 'error')
 
+        else:
+            flash('Invalid action.', 'warning')
+
     except Exception as e:
+        print(f"❌ Exception in approve_submission route: {e}")
         flash('An error occurred while processing the submission.', 'error')
 
     return redirect(url_for('admin.approve_submissions'))
+
 
 
 @admin_bp.route('/users')
 @login_required
 @role_required('admin')
 def manage_users():
-    # Get all users
     users_response = current_app.supabase_service.get_client().table('users').select('*').execute()
     users = users_response.data if users_response.data else []
+
+    for user in users:
+        if user.get('created_at') and isinstance(user['created_at'], str):
+            try:
+                user['created_at'] = datetime.fromisoformat(user['created_at'].replace('Z', '+00:00'))
+            except Exception:
+                user['created_at'] = None
 
     return render_template('admin/manage_users.html', users=users)
 
@@ -174,23 +214,16 @@ def manage_users():
 @login_required
 @role_required('admin')
 def analytics():
-    # Get analytics data
     try:
-        # Top students by points
-        top_students = current_app.supabase_service.get_client().table('users').select('full_name, points').eq('role',
-                                                                                                   'student').order(
-            'points', desc=True).limit(10).execute()
+        top_students = current_app.supabase_service.get_client().table('users').select('full_name, points').eq('role', 'student').order('points', desc=True).limit(10).execute()
 
-        # Project completion rates
         total_projects = current_app.supabase_service.get_client().table('projects').select('status').execute()
         project_stats = {}
         for project in total_projects.data:
             status = project['status']
             project_stats[status] = project_stats.get(status, 0) + 1
 
-        # Monthly submission trends (simplified)
-        submissions_response = current_app.supabase_service.get_client().table('submissions').select(
-            'submitted_at, status').execute()
+        submissions_response = current_app.supabase_service.get_client().table('submissions').select('submitted_at, status').execute()
 
         analytics_data = {
             'top_students': top_students.data if top_students.data else [],

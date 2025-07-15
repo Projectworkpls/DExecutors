@@ -269,40 +269,51 @@ class SupabaseService:
             return None
 
     def get_pending_submissions(self):
-        """
-        Get all submissions awaiting admin review (status 'pending' or 'submitted'),
-        including related project and user information.
-        """
+        """Get all submissions with pending status for admin review"""
         try:
             client = self.get_client()
             if client is None:
                 return []
 
-            response = client.table('submissions').select(
-                '*, projects!submissions_project_id_fkey(*), users!submissions_student_id_fkey(*)'
-            ).in_('status', ['pending', 'submitted','under_review']).execute()
+            # Get submissions with status 'pending' and join with projects and users
+            response = client.table('submissions').select('''
+                *,
+                projects(id, title, description, credits, parent_id),
+                users(id, full_name, email)
+            ''').eq('status', 'pending').execute()
 
             return response.data if response.data else []
         except Exception as e:
             print(f"Error fetching pending submissions: {e}")
             return []
 
-
-
-
     def update_submission_status(self, submission_id, status, admin_feedback=None):
-        """Update submission status"""
+        """Update submission status and admin feedback"""
         try:
             client = self.get_client()
             if client is None:
-                return None
+                print("❌ Error: Supabase client is None")
+                return False
 
-            update_data = {"status": status}
+            update_data = {
+                "status": status,
+                "reviewed_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat()
+            }
+
             if admin_feedback:
                 update_data["admin_feedback"] = admin_feedback
 
+            print(f"🔄 Attempting to update submission {submission_id} with: {update_data}")
             response = client.table('submissions').update(update_data).eq('id', submission_id).execute()
-            return response.data[0] if response.data else None
+
+            print("📦 Supabase Update Response:")
+            print("Status Code:", response.status_code)
+            print("Returned Data:", response.data)
+            print("Error:", getattr(response, 'error', None))
+
+            return response.status_code in (200, 201)
+
         except Exception as e:
-            print(f"Error updating submission: {e}")
-            return None
+            print(f"🔥 Exception in update_submission_status: {e}")
+            return False

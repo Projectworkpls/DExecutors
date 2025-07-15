@@ -34,18 +34,9 @@
                 <select class="form-select" id="grade" name="grade">
                     <option value="">All Grades</option>
                     <option value="K" {{ 'selected' if grade_filter == 'K' }}>Kindergarten</option>
-                    <option value="1" {{ 'selected' if grade_filter == '1' }}>Grade 1</option>
-                    <option value="2" {{ 'selected' if grade_filter == '2' }}>Grade 2</option>
-                    <option value="3" {{ 'selected' if grade_filter == '3' }}>Grade 3</option>
-                    <option value="4" {{ 'selected' if grade_filter == '4' }}>Grade 4</option>
-                    <option value="5" {{ 'selected' if grade_filter == '5' }}>Grade 5</option>
-                    <option value="6" {{ 'selected' if grade_filter == '6' }}>Grade 6</option>
-                    <option value="7" {{ 'selected' if grade_filter == '7' }}>Grade 7</option>
-                    <option value="8" {{ 'selected' if grade_filter == '8' }}>Grade 8</option>
-                    <option value="9" {{ 'selected' if grade_filter == '9' }}>Grade 9</option>
-                    <option value="10" {{ 'selected' if grade_filter == '10' }}>Grade 10</option>
-                    <option value="11" {{ 'selected' if grade_filter == '11' }}>Grade 11</option>
-                    <option value="12" {{ 'selected' if grade_filter == '12' }}>Grade 12</option>
+                    {% for i in range(1, 13) %}
+                        <option value="{{ i }}" {{ 'selected' if grade_filter == i|string }}>Grade {{ i }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-3">
@@ -81,9 +72,10 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <p class="card-text text-muted">{{ project.description[:150] }}{% if project.description|length > 150 %}...{% endif %}</p>
-                    
-                    <!-- AI Evaluation Info -->
+                    <p class="card-text text-muted">
+                        {{ project.description[:150] }}{% if project.description|length > 150 %}...{% endif %}
+                    </p>
+
                     {% if project.ai_evaluation %}
                         {% set ai_eval = project.ai_evaluation if project.ai_evaluation is mapping else (project.ai_evaluation | from_json) %}
                         {% if ai_eval %}
@@ -125,14 +117,15 @@
                         </div>
                         {% endif %}
                     {% endif %}
-                    
-                    <div class="d-flex justify-content-between align-items-center">
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
                         <small class="text-muted">
                             <i class="fas fa-calendar me-1"></i>
                             Posted {{ project.created_at.strftime('%b %d') if project.created_at else 'Recently' }}
                         </small>
-                        
+
                         <form method="POST" action="{{ url_for('student.claim_project', project_id=project.id) }}" class="d-inline">
+                            {{ csrf_token() }}
                             <button type="submit" class="btn btn-primary btn-sm">
                                 <i class="fas fa-hand-paper me-1"></i>
                                 Claim Project
@@ -164,18 +157,10 @@
     <div class="col-12">
         <nav aria-label="Projects pagination">
             <ul class="pagination justify-content-center">
-                <li class="page-item disabled">
-                    <span class="page-link">Previous</span>
-                </li>
-                <li class="page-item active">
-                    <span class="page-link">1</span>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="#">2</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="#">Next</a>
-                </li>
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                <li class="page-item active"><span class="page-link">1</span></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
             </ul>
         </nav>
     </div>
@@ -185,13 +170,13 @@
 
 {% block extra_scripts %}
 <script>
-// Auto-submit form when filters change
-document.getElementById('grade').addEventListener('change', function() {
-    this.form.submit();
-});
+    // Auto-submit form when filters change
+    document.getElementById('grade')?.addEventListener('change', function () {
+        this.form.submit();
+    });
 
-document.getElementById('sort').addEventListener('change', function() {
-    this.form.submit();
-});
+    document.getElementById('sort')?.addEventListener('change', function () {
+        this.form.submit();
+    });
 </script>
 {% endblock %}

@@ -143,7 +143,7 @@
     .section-title {
       color: var(--primary);
       margin-top: 0;
-      margin-bottom: 1.1rem;
+      margin-bottom: 1.5rem;
       font-size: 1.4rem;
       border-left: 4px solid var(--accent);
       padding-left: 0.7rem;
@@ -236,44 +236,25 @@
     }
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
       margin: 0 0 2rem 0;
     }
     .feature-card {
       background: var(--bg);
       border-left: 5px solid var(--primary);
-      border-radius: 10px;
-      box-shadow: 0 1px 4px #e0e7ef33;
-      padding: 1.1rem 1.2rem 1.1rem 1.5rem;
-      font-size: 1.05rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #e0e7ef33;
+      padding: 1.5rem 1.5rem 1.5rem 2rem;
+      font-size: 1.1rem;
       font-weight: 500;
       transition: box-shadow 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      min-height: 100px;
     }
     .feature-card:hover {
       box-shadow: 0 6px 24px #dbeafe99;
-      transform: translateY(-2px) scale(1.02);
-    }
-    .milestones-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.2rem;
-      margin: 1.5rem 0 2rem 0;
-    }
-    .milestone-card {
-      background: var(--gray);
-      border-radius: 10px;
-      padding: 1rem 1.2rem;
-      min-width: 200px;
-      flex: 1 1 180px;
-      font-size: 1.01rem;
-      color: var(--secondary);
-      font-weight: 500;
-      box-shadow: 0 1px 4px #e0e7ef33;
-      transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .milestone-card:hover {
-      box-shadow: 0 6px 24px #bae6fd99;
       transform: translateY(-2px) scale(1.02);
     }
     .leaderboard-section {
@@ -424,6 +405,7 @@
       nav { flex-direction: column; gap: 1rem; }
       nav .nav-links { flex-direction: column; gap: 0.2rem; }
       .login-btn { margin-left: 0; margin-top: 0.5rem; }
+      .features-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -455,17 +437,42 @@
   <section class="ideas-section">
     <div class="section-title">Latest Ideas</div>
     <div class="ideas-grid">
-      {% for idea in ideas %}
-        <div class="idea-card">
-          <h4>{{ idea.title }}</h4>
-          <p>{{ idea.description[:90] }}{% if idea.description|length > 90 %}...{% endif %}</p>
-          <div class="credits">Credits: {{ idea.credits or 10 }}</div>
-          <a href="{{ url_for('ideas.idea_detail', project_id=idea.id) }}">View Details</a>
-        </div>
-      {% endfor %}
-      {% if ideas|length == 0 %}
-        <div>No ideas posted yet. Check back soon!</div>
-      {% endif %}
+      <div class="idea-card">
+        <h4>Smart Home Automation System</h4>
+        <p>Build a voice-controlled home automation system using Arduino and IoT sensors. Should control lights, temperature, and security features.</p>
+        <div class="credits">Credits: 25</div>
+        <a href="#">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Local Business Directory App</h4>
+        <p>Create a mobile app to help people discover local businesses in their area with reviews, ratings, and contact information.</p>
+        <div class="credits">Credits: 20</div>
+        <a href="#">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Student Study Planner</h4>
+        <p>Design a web-based study planner that helps students organize their coursework, set reminders, and track progress across subjects.</p>
+        <div class="credits">Credits: 15</div>
+        <a href="#">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Environmental Monitoring Dashboard</h4>
+        <p>Build a dashboard that tracks air quality, weather patterns, and environmental data for a specific city or region.</p>
+        <div class="credits">Credits: 30</div>
+        <a href="#">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Online Learning Platform</h4>
+        <p>Create an interactive learning platform with video lessons, quizzes, and progress tracking for high school students.</p>
+        <div class="credits">Credits: 35</div>
+        <a href="#">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Personal Finance Tracker</h4>
+        <p>Develop a simple budgeting app that helps users track expenses, set savings goals, and visualize spending patterns.</p>
+        <div class="credits">Credits: 18</div>
+        <a href="#">View Details</a>
+      </div>
     </div>
   </section>
 
@@ -542,22 +549,20 @@
   </section>
 
   <section class="section">
-    <div class="section-title">Concept Snapshot</div>
+    <div class="section-title">How It Works</div>
     <div class="features-grid">
-      <div class="feature-card"><b>Parents/Mentors</b> post real-world ideas + budgets (₹5000 max at Level 1)</div>
-      <div class="feature-card"><b>AI</b> evaluates feasibility, budget, deadline, and breaks it into smart milestones</div>
-      <div class="feature-card"><b>Students</b> apply to complete the challenge</div>
-      <div class="feature-card"><b>Reputation XP</b> grows for both sides on completion</div>
-      <div class="feature-card"><b>Escrow system</b> holds the funds</div>
-      <div class="feature-card">Platform takes a <b>20% fee</b> per completed project</div>
-    </div>
-    <div class="section-title" style="margin-top:2.5rem;">Example AI-Generated Milestones</div>
-    <div class="milestones-list">
-      <div class="milestone-card">Idea Feasibility Review & Budget Validation</div>
-      <div class="milestone-card">Milestone 1: Initial Prototype Submission</div>
-      <div class="milestone-card">Milestone 2: User Feedback & Iteration</div>
-      <div class="milestone-card">Milestone 3: Final Delivery & QA</div>
-      <div class="milestone-card">Escrow Release & XP Award</div>
+      <div class="feature-card">
+        <div><b>Parents/Mentors</b> post real-world ideas with budgets up to ₹5000 for Level 1 projects</div>
+      </div>
+      <div class="feature-card">
+        <div><b>AI System</b> evaluates feasibility, budget, and deadline to create smart project milestones</div>
+      </div>
+      <div class="feature-card">
+        <div><b>Students</b> apply to complete challenges and build their skills through hands-on experience</div>
+      </div>
+      <div class="feature-card">
+        <div><b>Reputation XP</b> grows for both parties upon successful project completion</div>
+      </div>
     </div>
   </section>
 
@@ -565,15 +570,15 @@
     <div class="section-title">What Our Users Say</div>
     <div class="testimonials-grid">
       <div class="testimonial-card">
-        <div>“DExecutors helped me turn my college project idea into a real-world product. The AI milestones kept me on track, and the escrow made payment super safe!”</div>
+        <div>"DExecutors helped me turn my college project idea into a real-world product. The AI milestones kept me on track, and the escrow made payment super safe!"</div>
         <div class="testimonial-author">— Ananya, Student</div>
       </div>
       <div class="testimonial-card">
-        <div>“I love the XP system! It’s motivating and helps me stand out as a reliable executor. The platform is fun and professional.”</div>
+        <div>"I love the XP system! It's motivating and helps me stand out as a reliable executor. The platform is fun and professional."</div>
         <div class="testimonial-author">— Vivek, Freelancer</div>
       </div>
       <div class="testimonial-card">
-        <div>“The Dispute Jury is a game-changer. Community-based resolution means everyone feels heard and treated fairly.”</div>
+        <div>"The Dispute Jury is a game-changer. Community-based resolution means everyone feels heard and treated fairly."</div>
         <div class="testimonial-author">— Maria, Creator</div>
       </div>
     </div>
@@ -588,5 +593,6 @@
   <footer>
     &copy; 2025 DExecutors. All rights reserved. | Built for innovators, by innovators.
   </footer>
+
 </body>
 </html>

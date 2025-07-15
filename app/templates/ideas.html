@@ -2,55 +2,809 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Browse Ideas – DExecutors</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>DExecutors</title>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; margin: 0; }
-    .container { max-width: 1000px; margin: 3rem auto; background: #fff; border-radius: 14px; box-shadow: 0 2px 16px #e0e7ef33; padding: 2.5rem 2rem; }
-    h1 { color: #2563eb; margin-bottom: 1.5rem; font-size: 2.1rem; }
-    .ideas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1.5rem; }
-    .idea-card { background: #f1f5fb; border-left: 4px solid #2563eb; border-radius: 8px; padding: 1rem 1.2rem 1rem 1.4rem; min-height: 120px; display: flex; flex-direction: column; }
-    .idea-card h3 { margin: 0 0 0.5rem 0; color: #2563eb; font-size: 1.13rem; }
-    .idea-card p { margin: 0 0 0.6rem 0; color: #1e293b; font-size: 1rem; }
-    .idea-card .credits { font-size: 0.98rem; color: #1e40af; margin-bottom: 0.2rem; }
-    .idea-card a { color: #38bdf8; text-decoration: underline; font-weight: 500; margin-top: 0.6rem; font-size: 1rem; }
-    .no-ideas { text-align: center; color: #64748b; margin: 2.5rem 0; font-size: 1.2rem; }
-    .actions { margin-top: 2.5rem; text-align: center; }
-    .btn { display: inline-block; margin: 0.4rem 1rem; padding: 0.7rem 2rem; border: none; border-radius: 7px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.18s; text-decoration: none; }
-    .btn-login { background: #2563eb; color: #fff; }
-    .btn-login:hover { background: #38bdf8; color: #1e40af; }
-    .btn-back { background: #e5e7eb; color: #1e293b; }
-    .btn-back:hover { background: #2563eb; color: #fff; }
+    :root {
+      --primary: #2563eb;
+      --secondary: #1e40af;
+      --bg: #f8fafc;
+      --white: #fff;
+      --gray: #e5e7eb;
+      --text: #1e293b;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --shadow: 0 4px 24px #e0e7ef55;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(90deg, var(--primary) 60%, var(--accent) 100%);
+      color: var(--white);
+      padding: 2.2rem 1rem 2rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 8px #dbeafe;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+    header p {
+      margin: 0;
+      font-size: 1.15rem;
+      opacity: 0.98;
+      font-weight: 400;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      background: var(--secondary);
+      padding: 0.8rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    nav .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+    nav a {
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.4rem 1.2rem;
+      border-radius: 6px;
+      font-size: 1.05rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    nav a:hover, nav a.active {
+      background: var(--accent);
+      color: var(--secondary);
+    }
+    .login-btn {
+      margin-left: 2rem;
+      background: var(--white);
+      color: var(--primary);
+      border: none;
+      font-weight: 600;
+      padding: 0.4rem 1.3rem;
+      border-radius: 6px;
+      font-size: 1.05rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #dbeafe55;
+      transition: background 0.2s, color 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .login-btn:hover {
+      background: var(--accent);
+      color: var(--secondary);
+    }
+    .hero {
+      background: var(--white);
+      margin: 2.5rem auto 2rem auto;
+      max-width: 900px;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 2.3rem 2rem 2rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hero h2 {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.7rem;
+      font-weight: 700;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 1.4rem;
+      max-width: 650px;
+    }
+    .hero .cta-btn {
+      background: var(--primary);
+      color: var(--white);
+      font-size: 1.08rem;
+      font-weight: 600;
+      padding: 0.8rem 2.1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #dbeafe88;
+      transition: background 0.18s, transform 0.18s;
+      margin-top: 1rem;
+    }
+    .hero .cta-btn:hover {
+      background: var(--accent);
+      color: var(--secondary);
+      transform: translateY(-2px) scale(1.03);
+    }
+    .section {
+      width: 96vw;
+      max-width: 1200px;
+      margin: 2.5rem auto;
+      padding: 2.2rem 2rem;
+      background: var(--white);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .section-title {
+      color: var(--primary);
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      font-size: 1.4rem;
+      border-left: 4px solid var(--accent);
+      padding-left: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 2rem;
+      margin: 0 0 1.5rem 0;
+    }
+    .stat-card {
+      background: var(--bg);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #e0e7ef33;
+      padding: 1.2rem 1.5rem;
+      text-align: center;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .stat-card:hover {
+      box-shadow: 0 6px 24px #dbeafe99;
+      transform: translateY(-3px) scale(1.03);
+    }
+    .stat-card h3 {
+      font-size: 2.1rem;
+      color: var(--primary);
+      margin: 0 0 0.4rem 0;
+      font-weight: 700;
+    }
+    .stat-card p {
+      font-size: 1.05rem;
+      color: var(--secondary);
+      margin: 0;
+      font-weight: 500;
+    }
+    .ideas-section {
+      width: 96vw;
+      max-width: 1200px;
+      margin: 2.5rem auto;
+      padding: 2.2rem 2rem;
+      background: var(--white);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .ideas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1.5rem;
+      margin: 0 0 2rem 0;
+    }
+    .idea-card {
+      background: var(--bg);
+      border-left: 5px solid var(--primary);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px #e0e7ef33;
+      padding: 1.1rem 1.2rem 1.1rem 1.5rem;
+      font-size: 1.05rem;
+      font-weight: 500;
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 160px;
+    }
+    .idea-card h4 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1.13rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .idea-card p {
+      margin: 0 0 0.6rem 0;
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+    .idea-card .credits {
+      font-size: 0.95rem;
+      color: var(--secondary);
+      margin-bottom: 0.2rem;
+    }
+    .idea-card a {
+      color: var(--accent);
+      text-decoration: underline;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      align-self: flex-start;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin: 0 0 2rem 0;
+    }
+    .feature-card {
+      background: var(--bg);
+      border-left: 5px solid var(--primary);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #e0e7ef33;
+      padding: 1.5rem 1.5rem 1.5rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      min-height: 100px;
+    }
+    .feature-card:hover {
+      box-shadow: 0 6px 24px #dbeafe99;
+      transform: translateY(-2px) scale(1.02);
+    }
+    .leaderboard-section {
+      width: 100vw;
+      max-width: 100vw;
+      left: 50%;
+      right: 50%;
+      position: relative;
+      transform: translateX(-50%);
+      background: var(--white);
+      padding: 2.5rem 0;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      margin: 2.5rem 0 2rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .leaderboard-title {
+      color: var(--primary);
+      margin-bottom: 1.1rem;
+      font-size: 1.7rem;
+      border-left: 4px solid var(--accent);
+      padding-left: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-align: center;
+      max-width: 1600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .leaderboard-table-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    .leaderboard-table {
+      width: 90vw;
+      max-width: 700px;
+      border-collapse: separate;
+      border-spacing: 0 0.5rem;
+      margin-bottom: 1.2rem;
+      background: var(--bg);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px #e0e7ef33;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 0.8rem 1rem;
+      text-align: left;
+    }
+    .leaderboard-table th {
+      background: var(--primary);
+      color: var(--white);
+      font-weight: 600;
+      border: none;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+    .leaderboard-table td {
+      text-align: center;
+      font-size: 1.06rem;
+    }
+    .leaderboard-table tr {
+      background: var(--white);
+      border-radius: 6px;
+      box-shadow: 0 1px 4px #e0e7ef15;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .leaderboard-table tr:hover {
+      box-shadow: 0 6px 24px #dbeafe99;
+      transform: translateY(-1px) scale(1.01);
+    }
+    .leaderboard-table td.rank {
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 1.15rem;
+    }
+    .leaderboard-table td.xp {
+      color: var(--success);
+      font-weight: 600;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin: 2.5rem 0 2rem 0;
+    }
+    .testimonial-card {
+      background: var(--bg);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px #e0e7ef33;
+      padding: 1.3rem 1.3rem 1.1rem 1.3rem;
+      font-size: 1.04rem;
+      color: var(--text);
+      font-weight: 400;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .testimonial-card:hover {
+      box-shadow: 0 6px 24px #bae6fd99;
+      transform: translateY(-2px) scale(1.02);
+    }
+    .testimonial-author {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 1rem;
+      margin-top: 0.8rem;
+      text-align: right;
+    }
+    .cta {
+      background: var(--accent);
+      color: var(--secondary);
+      padding: 1.2rem 2rem;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      text-align: center;
+      margin: 2.5rem 0 0 0;
+      font-weight: 600;
+      box-shadow: 0 2px 8px #bae6fd88;
+    }
+    footer {
+      background: var(--gray);
+      padding: 2rem 0 1rem 0;
+      text-align: center;
+      color: #64748b;
+      font-size: 1rem;
+      margin-top: 3rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+      background-color: var(--white);
+      margin: 5% auto;
+      padding: 0;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 700px;
+      position: relative;
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      cursor: pointer;
+      z-index: 1001;
+    }
+    
+    .close:hover,
+    .close:focus {
+      color: var(--primary);
+    }
+    
+    #ideaContent {
+      padding: 2.5rem 2rem;
+    }
+    
+    #ideaContent h1 {
+      color: var(--primary);
+      margin-bottom: 1.2rem;
+      font-size: 2rem;
+      margin-top: 0;
+    }
+    
+    #ideaContent .meta {
+      color: #64748b;
+      font-size: 1.05rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    #ideaContent .credits {
+      color: var(--secondary);
+      font-weight: 600;
+      margin-right: 1.5rem;
+    }
+    
+    #ideaContent .target-age {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    #ideaContent .desc {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    
+    #ideaContent .actions {
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+    
+    #ideaContent .btn {
+      display: inline-block;
+      margin: 0.4rem 1rem;
+      padding: 0.8rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+    }
+    
+    #ideaContent .btn-login {
+      background: var(--primary);
+      color: var(--white);
+    }
+    
+    #ideaContent .btn-login:hover {
+      background: var(--accent);
+      color: var(--secondary);
+      transform: translateY(-2px);
+    }
+    
+    #ideaContent .btn-back {
+      background: var(--gray);
+      color: var(--text);
+    }
+    
+    #ideaContent .btn-back:hover {
+      background: var(--primary);
+      color: var(--white);
+      transform: translateY(-2px);
+    }
+    @media (max-width: 900px) {
+      .section, .hero, .ideas-section { padding-left: 1rem; padding-right: 1rem; }
+      .section, .ideas-section { max-width: 100%; }
+      nav .nav-links { gap: 1rem; }
+      .leaderboard-table { width: 98vw; }
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 2rem; }
+      .hero h2 { font-size: 1.2rem; }
+      .section, .ideas-section { padding: 1rem; }
+      .leaderboard-table th, .leaderboard-table td { font-size: 0.95rem; padding: 0.6rem 0.5rem; }
+      nav { flex-direction: column; gap: 1rem; }
+      nav .nav-links { flex-direction: column; gap: 0.2rem; }
+      .login-btn { margin-left: 0; margin-top: 0.5rem; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Open Ideas</h1>
-    {% if ideas and ideas|length > 0 %}
-      <div class="ideas-grid">
-        {% for idea in ideas %}
-          <div class="idea-card">
-            <h3><a href="{{ url_for('ideas.idea_detail', project_id=idea.id) }}">{{ idea.title }}</a></h3>
-            <p>{{ idea.description[:90] }}{% if idea.description|length > 90 %}...{% endif %}</p>
-            <div class="credits">Credits: {{ idea.credits or 10 }}</div>
-            <a href="{{ url_for('ideas.idea_detail', project_id=idea.id) }}">View Details</a>
-          </div>
-        {% endfor %}
+  <header>
+    <h1>DExecutors</h1>
+    <p>🌟 Where parents post real-world ideas for students to complete and earn credits, skills, and recognition!</p>
+  </header>
+  <nav>
+    <div class="nav-links">
+      <a href="#" class="active">Home</a>
+      <a href="{{ url_for('ideas.ideas') }}">Ideas</a>
+      <a href="#">Leaderboard</a>
+      <a href="#">Profile</a>
+    </div>
+    <a class="login-btn" href="{{ url_for('auth.login') }}">Login</a>
+  </nav>
+
+  <section class="hero">
+    <h2>Connecting Parents' Ideas with Students' Talent</h2>
+    <p>
+      <b>DExecutors</b> is a unique platform where parents and mentors post real challenges, and students from around the world collaborate to solve them, earn credits, and build their reputation.<br>
+      <span style="color:var(--primary);font-weight:600;">Every project is a new opportunity to learn, earn, and shine!</span>
+    </p>
+    <a href="{{ url_for('ideas.ideas') }}" class="cta-btn">Browse Ideas</a>
+  </section>
+
+  <section class="ideas-section">
+    <div class="section-title">Latest Ideas</div>
+    <div class="ideas-grid">
+      <div class="idea-card">
+        <h4>Smart Home Automation System</h4>
+        <p>Build a voice-controlled home automation system using Arduino and IoT sensors. Should control lights, temperature, and security features.</p>
+        <div class="credits">Credits: 25</div>
+        <a href="#" onclick="openIdeaDetail('smart-home-automation')">View Details</a>
       </div>
-    {% else %}
-      <div class="no-ideas">
-        No ideas are open right now.<br>
-        {% if not current_user.is_authenticated %}
-          <div class="actions">
-            <a href="{{ url_for('auth.login') }}" class="btn btn-login">Login</a>
-            <a href="{{ url_for('index') }}" class="btn btn-back">Go Back to Dashboard</a>
-          </div>
-        {% else %}
-          <div class="actions">
-            <a href="{{ url_for('index') }}" class="btn btn-back">Go Back to Dashboard</a>
-          </div>
-        {% endif %}
+      <div class="idea-card">
+        <h4>Local Business Directory App</h4>
+        <p>Create a mobile app to help people discover local businesses in their area with reviews, ratings, and contact information.</p>
+        <div class="credits">Credits: 20</div>
+        <a href="#" onclick="openIdeaDetail('business-directory-app')">View Details</a>
       </div>
-    {% endif %}
+      <div class="idea-card">
+        <h4>Student Study Planner</h4>
+        <p>Design a web-based study planner that helps students organize their coursework, set reminders, and track progress across subjects.</p>
+        <div class="credits">Credits: 15</div>
+        <a href="#" onclick="openIdeaDetail('study-planner')">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Environmental Monitoring Dashboard</h4>
+        <p>Build a dashboard that tracks air quality, weather patterns, and environmental data for a specific city or region.</p>
+        <div class="credits">Credits: 30</div>
+        <a href="#" onclick="openIdeaDetail('environmental-monitoring')">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Online Learning Platform</h4>
+        <p>Create an interactive learning platform with video lessons, quizzes, and progress tracking for high school students.</p>
+        <div class="credits">Credits: 35</div>
+        <a href="#" onclick="openIdeaDetail('learning-platform')">View Details</a>
+      </div>
+      <div class="idea-card">
+        <h4>Personal Finance Tracker</h4>
+        <p>Develop a simple budgeting app that helps users track expenses, set savings goals, and visualize spending patterns.</p>
+        <div class="credits">Credits: 18</div>
+        <a href="#" onclick="openIdeaDetail('finance-tracker')">View Details</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Platform Stats</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>2,400+</h3>
+        <p>Ideas Funded</p>
+      </div>
+      <div class="stat-card">
+        <h3>6,100+</h3>
+        <p>Executors Worldwide</p>
+      </div>
+      <div class="stat-card">
+        <h3>₹1.2Cr+</h3>
+        <p>Funds Disbursed</p>
+      </div>
+      <div class="stat-card">
+        <h3>4.9★</h3>
+        <p>Avg. Project Rating</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="leaderboard-section">
+    <div class="leaderboard-title">🌟 Top Student Executors</div>
+    <div class="leaderboard-table-container">
+      <table class="leaderboard-table">
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Level</th>
+          <th>XP</th>
+          <th>Projects Completed</th>
+        </tr>
+        <tr>
+          <td class="rank">1</td>
+          <td>Priya S.</td>
+          <td>7</td>
+          <td class="xp">12,800</td>
+          <td>34</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td>Arjun P.</td>
+          <td>6</td>
+          <td class="xp">10,200</td>
+          <td>29</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td>Fatima R.</td>
+          <td>6</td>
+          <td class="xp">9,750</td>
+          <td>26</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td>Chen L.</td>
+          <td>5</td>
+          <td class="xp">8,600</td>
+          <td>22</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td>David M.</td>
+          <td>5</td>
+          <td class="xp">7,900</td>
+          <td>21</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">How It Works</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div><b>Parents/Mentors</b> post real-world ideas with budgets up to ₹5000 for Level 1 projects</div>
+      </div>
+      <div class="feature-card">
+        <div><b>AI System</b> evaluates feasibility, budget, and deadline to create smart project milestones</div>
+      </div>
+      <div class="feature-card">
+        <div><b>Students</b> apply to complete challenges and build their skills through hands-on experience</div>
+      </div>
+      <div class="feature-card">
+        <div><b>Reputation XP</b> grows for both parties upon successful project completion</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">What Our Users Say</div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div>"DExecutors helped me turn my college project idea into a real-world product. The AI milestones kept me on track, and the escrow made payment super safe!"</div>
+        <div class="testimonial-author">— Ananya, Student</div>
+      </div>
+      <div class="testimonial-card">
+        <div>"I love the XP system! It's motivating and helps me stand out as a reliable executor. The platform is fun and professional."</div>
+        <div class="testimonial-author">— Vivek, Freelancer</div>
+      </div>
+      <div class="testimonial-card">
+        <div>"The Dispute Jury is a game-changer. Community-based resolution means everyone feels heard and treated fairly."</div>
+        <div class="testimonial-author">— Maria, Creator</div>
+      </div>
+    </div>
+    <div class="cta">
+      ❤️ Join a global-first impact platform.<br>
+      Shape a real trust economy through execution.<br>
+      <br>
+      <b>Interested?</b> DM with your background, skills, and one crazy idea for DExecutors!
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 DExecutors. All rights reserved. | Built for innovators, by innovators.
+  </footer>
+
+  <!-- Idea Detail Modal -->
+  <div id="ideaModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="ideaContent"></div>
+    </div>
   </div>
+
+  <script>
+    // Project data
+    const projects = {
+      'smart-home-automation': {
+        title: 'Smart Home Automation System',
+        description: 'Build a comprehensive voice-controlled home automation system using Arduino and IoT sensors. The system should control lights, temperature, and security features. Students will learn about IoT integration, sensor programming, voice recognition APIs, and mobile app development. This project involves both hardware and software components, making it perfect for students interested in embedded systems and smart technology.',
+        credits: 25,
+        targetAge: '16-22 years'
+      },
+      'business-directory-app': {
+        title: 'Local Business Directory App',
+        description: 'Create a mobile application to help people discover local businesses in their area with reviews, ratings, and contact information. The app should include features like location-based search, business categories, user reviews, photo uploads, and direct contact options. Students will gain experience in mobile development, database design, user interface design, and API integration.',
+        credits: 20,
+        targetAge: '17-23 years'
+      },
+      'study-planner': {
+        title: 'Student Study Planner',
+        description: 'Design a web-based study planner that helps students organize their coursework, set reminders, and track progress across subjects. Features should include calendar integration, assignment tracking, grade calculation, study session timers, and progress visualization. This project teaches web development, database management, user experience design, and project management skills.',
+        credits: 15,
+        targetAge: '15-21 years'
+      },
+      'environmental-monitoring': {
+        title: 'Environmental Monitoring Dashboard',
+        description: 'Build a comprehensive dashboard that tracks air quality, weather patterns, and environmental data for a specific city or region. The system should collect data from various APIs, process and visualize the information, and provide alerts for concerning environmental conditions. Students will learn about data visualization, API integration, real-time data processing, and environmental science.',
+        credits: 30,
+        targetAge: '18-24 years'
+      },
+      'learning-platform': {
+        title: 'Online Learning Platform',
+        description: 'Create an interactive learning platform with video lessons, quizzes, and progress tracking for high school students. The platform should support multiple subjects, interactive content, student-teacher communication, assignment submission, and performance analytics. This comprehensive project covers web development, database design, user authentication, and educational technology.',
+        credits: 35,
+        targetAge: '19-25 years'
+      },
+      'finance-tracker': {
+        title: 'Personal Finance Tracker',
+        description: 'Develop a simple budgeting application that helps users track expenses, set savings goals, and visualize spending patterns. Features should include expense categorization, budget alerts, financial goal tracking, spending analysis, and data export options. Students will learn about financial technology, data visualization, user interface design, and security best practices.',
+        credits: 18,
+        targetAge: '16-22 years'
+      }
+    };
+
+    // Modal functionality
+    const modal = document.getElementById('ideaModal');
+    const closeBtn = document.getElementsByClassName('close')[0];
+
+    function openIdeaDetail(projectId) {
+      const project = projects[projectId];
+      if (project) {
+        document.getElementById('ideaContent').innerHTML = `
+          <h1>${project.title}</h1>
+          <div class="meta">
+            <span class="credits">Credits: ${project.credits}</span>
+            <span class="target-age">Target Age: ${project.targetAge}</span>
+          </div>
+          <div class="desc">${project.description}</div>
+          <div class="actions">
+            <a href="#" onclick="showLoginPrompt()" class="btn btn-login">Login to Participate</a>
+            <a href="#" onclick="closeModal()" class="btn btn-back">Back to Ideas</a>
+          </div>
+        `;
+        modal.style.display = 'block';
+      }
+    }
+
+    function showLoginPrompt() {
+    if (confirm("You need to be logged in to participate in this project.\nClick OK to go to the login page.")) {
+        window.location.href = "{{ url_for('auth.login') }}";
+      }
+    }
+
+
+    function closeModal() {
+      modal.style.display = 'none';
+    }
+
+    closeBtn.onclick = closeModal;
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+  </script>
 </body>
 </html>
