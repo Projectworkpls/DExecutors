@@ -44,10 +44,48 @@
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
+
+                    <!-- Submission Format Selection Section -->
+                    <div id="submissionFormatSection" class="mt-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Choose Required Submission Format</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="submissionFormatSelect" class="form-label">Required Format for Student Submissions</label>
+                                    <select id="submissionFormatSelect" name="submission_format" class="form-select">
+                                        <option value="video">Video (MP4, demonstrations, presentations)</option>
+                                        <option value="image">Image/Photo (JPG, PNG, visual projects)</option>
+                                        <option value="url">Website/App Link (deployed projects, GitHub)</option>
+                                        <option value="pdf">PDF Report (research, documentation)</option>
+                                        <option value="text">Text Only (essays, written responses)</option>
+                                    </select>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-robot"></i> AI Recommendation:
+                                            <span id="formatAdvice" class="fw-semibold text-primary"></span>
+                                        </small>
+                                        <div id="formatReasoning" class="text-muted mt-1"></div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Note:</strong> Students will only be able to submit in the format you choose here.
+                                    Choose carefully based on what would best demonstrate their work.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mt-3 text-center">
                         <button class="btn btn-success" onclick="finalizeEvaluation()" id="finalizeBtn" style="display: none;">
                             <i class="fas fa-check-circle me-2"></i>
                             Finalize Project Evaluation
+                        </button>
+                        <button class="btn btn-secondary ms-2" onclick="cancelEvaluation()" id="cancelBtn" style="display: none;">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel & Save Without AI
                         </button>
                     </div>
                 </div>
@@ -58,6 +96,8 @@
 
 <script>
 let messageCount = 1;
+let evaluationComplete = false;
+let evaluationData = null;
 
 function handleKeyPress(event) {
     if (event.key === 'Enter') {
@@ -68,16 +108,16 @@ function handleKeyPress(event) {
 function sendMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
-    
+
     if (!message) return;
-    
+
     // Add user message to chat
     addMessageToChat(message, 'user');
     input.value = '';
-    
+
     // Show loading
     showLoading();
-    
+
     // Send to backend
     fetch('{{ url_for("parent.ai_chat") }}', {
         method: 'POST',
@@ -92,10 +132,11 @@ function sendMessage() {
         if (data.response) {
             addMessageToChat(data.response, 'ai');
             messageCount++;
-            
+
             // Show finalize button after a few exchanges
             if (messageCount >= 3) {
-                document.getElementById('finalizeBtn').style.display = 'block';
+                document.getElementById('finalizeBtn').style.display = 'inline-block';
+                document.getElementById('cancelBtn').style.display = 'inline-block';
             }
         } else {
             addMessageToChat('Sorry, there was an error processing your message.', 'ai');
@@ -111,7 +152,7 @@ function addMessageToChat(message, sender) {
     const chatContainer = document.getElementById('chatContainer');
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${sender}-message mb-3`;
-    
+
     if (sender === 'user') {
         messageDiv.innerHTML = `
             <div class="d-flex justify-content-end">
@@ -145,7 +186,7 @@ function addMessageToChat(message, sender) {
             </div>
         `;
     }
-    
+
     chatContainer.appendChild(messageDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
@@ -169,17 +210,30 @@ function finalizeEvaluation() {
     const btn = document.getElementById('finalizeBtn');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Finalizing...';
     btn.disabled = true;
-    
+
+    // Get selected submission format
+    const selectedFormat = document.getElementById('submissionFormatSelect').value;
+
+    // Finalize evaluation first to get AI recommendations
     fetch('{{ url_for("parent.finalize_evaluation") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+            submission_format: selectedFormat
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = data.redirect;
+            if (data.evaluation) {
+                // Show format selection with AI recommendation
+                showFormatSelection(data.evaluation);
+            } else {
+                // Redirect if no evaluation data
+                window.location.href = data.redirect;
+            }
         } else {
             alert('Error finalizing evaluation: ' + data.error);
             btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Finalize Project Evaluation';
@@ -191,6 +245,75 @@ function finalizeEvaluation() {
         btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Finalize Project Evaluation';
         btn.disabled = false;
     });
+}
+
+function showFormatSelection(evaluation) {
+    // Extract AI recommendation
+    const recommendedFormat = evaluation.recommended_submission_format || 'text';
+    const formatReasoning = evaluation.format_reasoning || 'AI analysis suggests this format';
+
+    // Update UI
+    document.getElementById('formatAdvice').textContent = recommendedFormat.toUpperCase();
+    document.getElementById('formatReasoning').textContent = formatReasoning;
+    document.getElementById('submissionFormatSelect').value = recommendedFormat;
+
+    // Show format selection section
+    document.getElementById('submissionFormatSection').style.display = 'block';
+
+    // Update finalize button
+    const finalizeBtn = document.getElementById('finalizeBtn');
+    finalizeBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Project with Selected Format';
+    finalizeBtn.disabled = false;
+    finalizeBtn.onclick = function() {
+        saveProjectWithFormat();
+    };
+}
+
+function saveProjectWithFormat() {
+    const selectedFormat = document.getElementById('submissionFormatSelect').value;
+
+    fetch('{{ url_for("parent.finalize_evaluation") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            submission_format: selectedFormat
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            alert('Error saving project: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error saving project');
+    });
+}
+
+function cancelEvaluation() {
+    if (confirm('Are you sure you want to cancel AI evaluation? Your project will be saved without AI insights.')) {
+        fetch('{{ url_for("parent.cancel_evaluation") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect;
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error canceling evaluation');
+        });
+    }
 }
 </script>
 
