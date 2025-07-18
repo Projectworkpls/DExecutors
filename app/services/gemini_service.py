@@ -98,6 +98,7 @@ class GeminiService:
         2. Assess age-appropriateness and feasibility for average school students
         3. Determine realistic time requirements
         4. Establish clear evaluation parameters
+        5. Recommend the BEST submission format for student work evaluation
 
         Start by asking 2-3 specific questions about:
         - The expected deliverables
@@ -105,17 +106,24 @@ class GeminiService:
         - Target age group specifics
         - Success criteria
 
-        Keep your questions concise and focused. After gathering information, you'll provide a comprehensive evaluation report.
+        Also consider what format would best showcase the student's work:
+        - VIDEO: For demonstrations, presentations, or process documentation
+        - IMAGE: For visual arts, crafts, or static displays
+        - URL: For websites, apps, or online content
+        - PDF: For research reports, written analysis, or documentation
+        - TEXT: For essays, stories, or simple written responses
+
+        Keep your questions concise and focused. After gathering information, you'll provide a comprehensive evaluation report with a recommended submission format.
         """
 
         try:
             chat = model.start_chat(history=[])
             response = chat.send_message(initial_prompt)
-            
+
             # Generate a unique session ID
             import uuid
             session_id = str(uuid.uuid4())
-            
+
             # Store the chat session in memory
             self._chat_sessions[session_id] = chat
 
@@ -142,7 +150,7 @@ class GeminiService:
                     "success": False,
                     "error": "Chat session not found"
                 }
-            
+
             chat_session = self._chat_sessions[session_id]
             response = chat_session.send_message(user_response)
             return {
@@ -166,7 +174,7 @@ class GeminiService:
                     "success": False,
                     "error": "Chat session not found"
                 }
-            
+
             chat_session = self._chat_sessions[session_id]
 
             finalization_prompt = """
@@ -197,6 +205,10 @@ class GeminiService:
             - Minimum credits: [number]
             - Maximum credits: [number]
             - Bonus criteria: [list criteria]
+
+            SUBMISSION FORMAT RECOMMENDATION:
+            - Recommended format: [video/image/url/pdf/text]
+            - Format reasoning: [why this format is best for evaluation]
 
             CHALLENGES AND SUCCESS:
             - Potential challenges: [list challenges]
@@ -257,6 +269,8 @@ class GeminiService:
                 "max_credits": 15,
                 "bonus_criteria": ["early submission", "exceptional quality"]
             },
+            "recommended_submission_format": "text",
+            "format_reasoning": "Best suits the project requirements",
             "potential_challenges": ["time management", "resource availability"],
             "success_indicators": ["project completion", "learning demonstration"]
         }
@@ -296,6 +310,18 @@ class GeminiService:
             if max_credits_match:
                 evaluation_data["recommended_credits"]["max_credits"] = int(max_credits_match.group(1))
 
+            # Extract submission format recommendation
+            format_match = re.search(r'recommended format:\s*(\w+)', response_text, re.IGNORECASE)
+            if format_match:
+                format_value = format_match.group(1).strip().lower()
+                if format_value in ['video', 'image', 'url', 'pdf', 'text']:
+                    evaluation_data["recommended_submission_format"] = format_value
+
+            # Extract format reasoning
+            reasoning_match = re.search(r'format reasoning:\s*([^\n]+)', response_text, re.IGNORECASE)
+            if reasoning_match:
+                evaluation_data["format_reasoning"] = reasoning_match.group(1).strip()
+
         except Exception as e:
             print(f"Error parsing structured response: {e}")
             # Return default values if parsing fails
@@ -318,6 +344,7 @@ class GeminiService:
         ORIGINAL PROJECT:
         Title: {project_data.get('title')}
         Description: {project_data.get('description')}
+        Required Format: {project_data.get('submission_format', 'text')}
 
         STUDENT SUBMISSION:
         Description: {submission_data.get('description')}
@@ -469,15 +496,15 @@ class GeminiService:
         import time
         current_time = time.time()
         expired_sessions = []
-        
+
         for session_id, session_data in self._chat_sessions.items():
             if isinstance(session_data, tuple) and len(session_data) > 1:
                 session_time = session_data[1]
                 if current_time - session_time > max_age_hours * 3600:
                     expired_sessions.append(session_id)
-        
+
         for session_id in expired_sessions:
             del self._chat_sessions[session_id]
-        
+
         if expired_sessions:
             print(f"Cleaned up {len(expired_sessions)} expired chat sessions")
