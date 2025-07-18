@@ -98,6 +98,7 @@ def post_idea():
                 'status': 'pending',
                 'ai_evaluation': {},
                 'evaluation_parameters': {},
+                'submission_format': 'text',  # Default format
                 'created_at': None  # Let Supabase handle this
             }
 
@@ -170,11 +171,17 @@ def finalize_evaluation():
             recommended_credits = ai_evaluation.get('recommended_credits', {})
             max_credits = recommended_credits.get('max_credits', temp_project.get('suggested_credits', 10))
 
+            # Get submission format from request or AI recommendation
+            submission_format = request.json.get('submission_format') if request.is_json else request.form.get('submission_format')
+            if not submission_format:
+                submission_format = ai_evaluation.get('recommended_submission_format', 'text')
+
             project_data.update({
                 'status': 'pending',
                 'credits': max_credits,  # Use the AI recommended credits
                 'ai_evaluation': ai_evaluation,
                 'evaluation_parameters': ai_evaluation.get('evaluation_parameters', {}),
+                'submission_format': submission_format,  # NEW FIELD
                 'created_at': None  # Let Supabase handle this
             })
 
@@ -258,6 +265,7 @@ def cancel_evaluation():
             'credits': temp_project.get('suggested_credits', 10),
             'ai_evaluation': {},
             'evaluation_parameters': {},
+            'submission_format': 'text',  # Default format
             'created_at': None
         })
 
