@@ -4,13 +4,32 @@ from werkzeug.utils import secure_filename
 from flask import current_app
 from datetime import datetime
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'pdf', 'doc', 'docx'}
+# File type specific extensions
+ALLOWED_EXTENSIONS = {
+    'image': {'png', 'jpg', 'jpeg', 'gif'},
+    'video': {'mp4', 'mov', 'avi', 'mkv'},
+    'pdf': {'pdf'},
+    'text': set()  # No file upload for text
+}
 
 
-def allowed_file(filename):
-    """Check if file extension is allowed"""
+def allowed_file(filename, file_type='any'):
+    """Check if file extension is allowed for the given type"""
+    if file_type == 'any':
+        # For backward compatibility - check against all extensions
+        all_extensions = set()
+        for ext_set in ALLOWED_EXTENSIONS.values():
+            all_extensions.update(ext_set)
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in all_extensions
+
+    if file_type not in ALLOWED_EXTENSIONS:
+        return False
+
+    if file_type == 'text':
+        return False  # Text submissions don't upload files
+
     return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS[file_type]
 
 
 def upload_file_to_storage(file, filename):
@@ -20,7 +39,7 @@ def upload_file_to_storage(file, filename):
         unique_filename = f"{uuid.uuid4()}_{secure_filename(filename)}"
 
         # Create upload directory if it doesn't exist
-        upload_dir = os.path.join(current_app.root_path, 'uploads')
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
         os.makedirs(upload_dir, exist_ok=True)
 
         # Save file
@@ -28,7 +47,7 @@ def upload_file_to_storage(file, filename):
         file.save(file_path)
 
         # Return URL (for local development)
-        return f"/uploads/{unique_filename}"
+        return f"/static/uploads/{unique_filename}"
 
     except Exception as e:
         print(f"Error uploading file: {e}")
@@ -102,7 +121,35 @@ def generate_project_summary(project_data):
         'difficulty': ai_eval.get('feasibility', {}).get('difficulty_level', 'Unknown'),
         'estimated_hours': ai_eval.get('feasibility', {}).get('estimated_time_hours', 'Unknown'),
         'age_range': ai_eval.get('age_appropriateness', {}).get('recommended_age_range', 'Unknown'),
-        'complexity_score': ai_eval.get('age_appropriateness', {}).get('complexity_score', 'Unknown')
+        'complexity_score': ai_eval.get('age_appropriateness', {}).get('complexity_score', 'Unknown'),
+        'submission_format': project_data.get('submission_format', 'text')
     }
 
     return summary
+
+
+def get_format_display_name(format_code):
+    """Get display name for submission format"""
+    format_names = {
+        'video': 'Video',
+        'image': 'Image/Photo',
+        'url': 'Website/URL',
+        'pdf': 'PDF Report',
+        'text': 'Text Only'
+    }
+    return format_names.get(format_code, format_code.title())
+
+
+def validate_submission_format(project_format, submitted_format):
+    """Validate that submission format matches required format"""
+    return project_format == submitted_format
+
+
+def get_file_size_limit(file_type):
+    """Get file size limit for different file types"""
+    limits = {
+        'image': 10 * 1024 * 1024,  # 10MB
+        'video': 50 * 1024 * 1024,  # 50MB
+        'pdf': 5 * 1024 * 1024,  # 5MB
+    }
+    return limits.get(file_type, 16 * 1024 * 1024)  # Default 16MB
