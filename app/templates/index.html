@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DExecutors</title>
   <style>
     :root {
@@ -65,6 +65,7 @@
       border-radius: 6px;
       font-size: 1.05rem;
       transition: background 0.2s, color 0.2s;
+      cursor: pointer;
     }
     nav a:hover, nav a.active {
       background: var(--accent);
@@ -84,6 +85,7 @@
       transition: background 0.2s, color 0.2s;
       text-decoration: none;
       display: inline-block;
+      white-space: nowrap;
     }
     .login-btn:hover {
       background: var(--accent);
@@ -125,11 +127,16 @@
       box-shadow: 0 2px 8px #dbeafe88;
       transition: background 0.18s, transform 0.18s;
       margin-top: 1rem;
+      text-decoration: none;
+      display: inline-block;
     }
     .hero .cta-btn:hover {
       background: var(--accent);
       color: var(--secondary);
       transform: translateY(-2px) scale(1.03);
+    }
+    section, .section, .ideas-section, .leaderboard-section {
+      scroll-margin-top: 80px;
     }
     .section {
       width: 96vw;
@@ -209,6 +216,10 @@
       justify-content: space-between;
       min-height: 160px;
     }
+    .idea-card:hover {
+      box-shadow: 0 6px 24px #bae6fd99;
+      transform: translateY(-2px) scale(1.02);
+    }
     .idea-card h4 {
       margin: 0 0 0.4rem 0;
       font-size: 1.13rem;
@@ -233,6 +244,7 @@
       font-weight: 500;
       margin-top: 0.5rem;
       align-self: flex-start;
+      cursor: pointer;
     }
     .features-grid {
       display: grid;
@@ -391,6 +403,104 @@
       margin-top: 3rem;
       border-top: 1px solid #e5e7eb;
     }
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background: var(--white);
+      border-radius: 18px;
+      max-width: 700px;
+      margin: 5vh auto;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      position: relative;
+      animation: modalSlideIn 0.3s ease-out forwards;
+      color: var(--text);
+    }
+    @keyframes modalSlideIn {
+      from {opacity: 0; transform: translateY(-50px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    .close {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+      transition: color 0.2s;
+      background: none;
+      border: none;
+    }
+    .close:hover {
+      color: var(--primary);
+    }
+    #ideaContent h1 {
+      color: var(--primary);
+      margin-bottom: 1.2rem;
+      font-size: 2rem;
+      margin-top: 0;
+    }
+    #ideaContent .meta {
+      color: #64748b;
+      font-size: 1.05rem;
+      margin-bottom: 1.5rem;
+    }
+    #ideaContent .credits {
+      color: var(--secondary);
+      font-weight: 600;
+      margin-right: 1.5rem;
+    }
+    #ideaContent .target-age {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    #ideaContent .desc {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    #ideaContent .actions {
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+    #ideaContent .btn {
+      display: inline-block;
+      margin: 0.4rem 1rem;
+      padding: 0.8rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+    }
+    #ideaContent .btn-login {
+      background: var(--primary);
+      color: var(--white);
+    }
+    #ideaContent .btn-login:hover {
+      background: var(--accent);
+      color: var(--secondary);
+      transform: translateY(-2px);
+    }
+    #ideaContent .btn-back {
+      background: var(--gray);
+      color: var(--text);
+    }
+    #ideaContent .btn-back:hover {
+      background: var(--primary);
+      color: var(--white);
+      transform: translateY(-2px);
+    }
     @media (max-width: 900px) {
       .section, .hero, .ideas-section { padding-left: 1rem; padding-right: 1rem; }
       .section, .ideas-section { max-width: 100%; }
@@ -406,72 +516,113 @@
       nav .nav-links { flex-direction: column; gap: 0.2rem; }
       .login-btn { margin-left: 0; margin-top: 0.5rem; }
       .features-grid { grid-template-columns: 1fr; }
+      .ideas-grid { grid-template-columns: 1fr; }
+      .leaderboard-table-container { overflow-x: auto; }
     }
   </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Scroll offset for sticky navbar on nav and "Browse Ideas" button
+    function smoothScrollToID(elem) {
+      if (!elem) return;
+      const yOffset = -80;
+      const y = elem.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({top: y, behavior: 'smooth'});
+    }
+
+    document.querySelectorAll('nav .nav-links a[href^="#"], .hero .cta-btn').forEach(el => {
+      el.addEventListener('click', e => {
+        const href = el.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          smoothScrollToID(document.querySelector(href));
+          // update nav active classes
+          document.querySelectorAll('nav .nav-links a').forEach(link => link.classList.remove('active'));
+          el.classList.add('active');
+        }
+      });
+    });
+
+
+    // Active nav highlighting on scroll
+    const sections = Array.from(document.querySelectorAll('section[id], header'));
+    window.addEventListener('scroll', ()=>{
+      const scrollY = window.pageYOffset;
+      let currentSectionId = '';
+      for (let sec of sections) {
+        if(scrollY >= (sec.offsetTop - 90)) currentSectionId = sec.id || 'home-section';
+      }
+      document.querySelectorAll('nav .nav-links a').forEach(link => {
+        link.classList.remove('active');
+        if(link.getAttribute('href') === '#' + currentSectionId) link.classList.add('active');
+      });
+    });
+  });
+</script>
 </head>
 <body>
-  <header>
+  <header id="home-section">
     <h1>DExecutors</h1>
     <p>🌟 Where parents post real-world ideas for students to complete and earn credits, skills, and recognition!</p>
   </header>
   <nav>
     <div class="nav-links">
-      <a href="#" class="active">Home</a>
-      <a href="{{ url_for('ideas.ideas') }}">Ideas</a>
-      <a href="#">Leaderboard</a>
-      <a href="#">Dispute Jury</a>
-      <a href="#">Profile</a>
+      <a href="#home-section" class="active">Home</a>
+      <a href="#ideas-section">Ideas</a>
+      <a href="#leaderboard-section">Leaderboard</a>
+      <a href="#what-our-users-say">Profile</a>
     </div>
-    <a class="login-btn" href="{{ url_for('auth.login') }}">Login</a>
+    <a class="login-btn" href="/login">Login</a>
   </nav>
-
   <section class="hero">
     <h2>Connecting Parents' Ideas with Students' Talent</h2>
     <p>
-      <b>DExecutors</b> is a unique platform where parents and mentors post real challenges, and students from around the world collaborate to solve them, earn credits, and build their reputation.<br>
+      <b>DExecutors</b> is a unique platform where parents and mentors post real challenges,
+      and students from around the world collaborate to solve them, earn credits, and build their reputation.<br />
       <span style="color:var(--primary);font-weight:600;">Every project is a new opportunity to learn, earn, and shine!</span>
     </p>
-    <a href="{{ url_for('ideas.ideas') }}" class="cta-btn">Browse Ideas</a>
+    <a href="#ideas-section" class="cta-btn">Browse Ideas</a>
   </section>
 
-  <section class="ideas-section">
+  <section id="ideas-section" class="ideas-section">
     <div class="section-title">Latest Ideas</div>
     <div class="ideas-grid">
       <div class="idea-card">
         <h4>Smart Home Automation System</h4>
         <p>Build a voice-controlled home automation system using Arduino and IoT sensors. Should control lights, temperature, and security features.</p>
         <div class="credits">Credits: 25</div>
-        <a href="#">View Details</a>
+        <a href="javascript:void(0);" onclick="openIdeaDetail('smart-home-automation')">View Details</a>
       </div>
       <div class="idea-card">
         <h4>Local Business Directory App</h4>
         <p>Create a mobile app to help people discover local businesses in their area with reviews, ratings, and contact information.</p>
         <div class="credits">Credits: 20</div>
-        <a href="#">View Details</a>
+        <a href="javascript:void(0);" onclick="openIdeaDetail('business-directory-app')">View Details</a>
       </div>
       <div class="idea-card">
         <h4>Student Study Planner</h4>
         <p>Design a web-based study planner that helps students organize their coursework, set reminders, and track progress across subjects.</p>
         <div class="credits">Credits: 15</div>
-        <a href="#">View Details</a>
+        <a href="javascript:void(0);" onclick="openIdeaDetail('study-planner')">View Details</a>
       </div>
       <div class="idea-card">
         <h4>Environmental Monitoring Dashboard</h4>
         <p>Build a dashboard that tracks air quality, weather patterns, and environmental data for a specific city or region.</p>
         <div class="credits">Credits: 30</div>
-        <a href="#">View Details</a>
+        <a href="javascript:void(0);" onclick="openIdeaDetail('environmental-monitoring')">View Details</a>
       </div>
       <div class="idea-card">
         <h4>Online Learning Platform</h4>
         <p>Create an interactive learning platform with video lessons, quizzes, and progress tracking for high school students.</p>
         <div class="credits">Credits: 35</div>
-        <a href="#">View Details</a>
+        <a href="javascript:void(0);" onclick="openIdeaDetail('learning-platform')">View Details</a>
       </div>
       <div class="idea-card">
         <h4>Personal Finance Tracker</h4>
         <p>Develop a simple budgeting app that helps users track expenses, set savings goals, and visualize spending patterns.</p>
         <div class="credits">Credits: 18</div>
-        <a href="#">View Details</a>
+        <a href="javascript:void(0);" onclick="openIdeaDetail('finance-tracker')">View Details</a>
       </div>
     </div>
   </section>
@@ -498,7 +649,7 @@
     </div>
   </section>
 
-  <section class="leaderboard-section">
+  <section id="leaderboard-section" class="leaderboard-section">
     <div class="leaderboard-title">🌟 Top Student Executors</div>
     <div class="leaderboard-table-container">
       <table class="leaderboard-table">
@@ -566,7 +717,7 @@
     </div>
   </section>
 
-  <section class="section">
+  <section id="what-our-users-say" class="section">
     <div class="section-title">What Our Users Say</div>
     <div class="testimonials-grid">
       <div class="testimonial-card">
@@ -593,6 +744,125 @@
   <footer>
     &copy; 2025 DExecutors. All rights reserved. | Built for innovators, by innovators.
   </footer>
+
+  <!-- Modal -->
+  <div id="ideaModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button class="close" aria-label="Close modal">&times;</button>
+      <div id="ideaContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const projects = {
+      'smart-home-automation': {
+        title: 'Smart Home Automation System',
+        description: 'Build a comprehensive voice-controlled home automation system using Arduino and IoT sensors. The system should control lights, temperature, and security features. Students will learn about IoT integration, sensor programming, voice recognition APIs, and mobile app development. This project involves both hardware and software components, making it perfect for students interested in embedded systems and smart technology.',
+        credits: 25,
+        targetAge: '16-22 years'
+      },
+      'business-directory-app': {
+        title: 'Local Business Directory App',
+        description: 'Create a mobile application to help people discover local businesses in their area with reviews, ratings, and contact information. The app should include features like location-based search, business categories, user reviews, photo uploads, and direct contact options. Students will gain experience in mobile development, database design, user interface design, and API integration.',
+        credits: 20,
+        targetAge: '17-23 years'
+      },
+      'study-planner': {
+        title: 'Student Study Planner',
+        description: 'Design a web-based study planner that helps students organize their coursework, set reminders, and track progress across subjects. Features should include calendar integration, assignment tracking, grade calculation, study session timers, and progress visualization. This project teaches web development, database management, user experience design, and project management skills.',
+        credits: 15,
+        targetAge: '15-21 years'
+      },
+      'environmental-monitoring': {
+        title: 'Environmental Monitoring Dashboard',
+        description: 'Build a comprehensive dashboard that tracks air quality, weather patterns, and environmental data for a specific city or region. The system should collect data from various APIs, process and visualize the information, and provide alerts for concerning environmental conditions. Students will learn about data visualization, API integration, real-time data processing, and environmental science.',
+        credits: 30,
+        targetAge: '18-24 years'
+      },
+      'learning-platform': {
+        title: 'Online Learning Platform',
+        description: 'Create an interactive learning platform with video lessons, quizzes, and progress tracking for high school students. The platform should support multiple subjects, interactive content, student-teacher communication, assignment submission, and performance analytics. This comprehensive project covers web development, database design, user authentication, and educational technology.',
+        credits: 35,
+        targetAge: '19-25 years'
+      },
+      'finance-tracker': {
+        title: 'Personal Finance Tracker',
+        description: 'Develop a simple budgeting application that helps users track expenses, set savings goals, and visualize spending patterns. Features should include expense categorization, budget alerts, financial goal tracking, spending analysis, and data export options. Students will learn about financial technology, data visualization, user interface design, and security best practices.',
+        credits: 18,
+        targetAge: '16-22 years'
+      }
+    };
+
+    const modal = document.getElementById('ideaModal');
+    const closeBtn = modal.querySelector('.close');
+    const ideaContent = document.getElementById('ideaContent');
+
+    function openIdeaDetail(id) {
+      const project = projects[id];
+      if (!project) {
+        alert('Project details not found.');
+        return;
+      }
+      ideaContent.innerHTML = `
+        <h1>${project.title}</h1>
+        <div class="meta">
+          <span class="credits">Credits: ${project.credits}</span>
+          <span class="target-age">Target Age: ${project.targetAge}</span>
+        </div>
+        <div class="desc">${project.description}</div>
+        <div class="actions">
+          <a href="/login" class="btn btn-login">Login to Participate</a>
+          <button onclick="closeModal()" class="btn btn-back">Close</button>
+        </div>
+      `;
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    window.addEventListener('click', event => {
+      if (event.target === modal) closeModal();
+    });
+
+    // Smooth scroll for nav links and hero button
+    document.querySelectorAll('nav .nav-links a, .hero .cta-btn').forEach(el => {
+      el.addEventListener('click', e => {
+        const href = el.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          const target = document.querySelector(href);
+          if (target) {
+            window.scrollTo({
+              top: target.offsetTop - 75,
+              behavior: 'smooth'
+            });
+            // update active class
+            document.querySelectorAll('nav .nav-links a').forEach(a => a.classList.remove('active'));
+            el.classList.add('active');
+          }
+        }
+      });
+    });
+
+    // Active nav link on scroll
+    window.addEventListener('scroll', () => {
+      const scrollPos = window.scrollY || window.pageYOffset;
+      let currentSection = 'home-section';
+      document.querySelectorAll('section').forEach(section => {
+        if (scrollPos >= section.offsetTop - 80) {
+          currentSection = section.id;
+        }
+      });
+      document.querySelectorAll('nav .nav-links a').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + currentSection);
+      });
+    });
+  </script>
 
 </body>
 </html>
