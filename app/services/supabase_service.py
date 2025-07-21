@@ -34,6 +34,8 @@ class SupabaseService:
 
     def get_client(self):
         if self.client is None:
+            print("SupabaseService.get_client called. client=", self.client)
+
             print("ERROR: Supabase client is None - reinitializing...")
             if self._url and self._key:
                 try:
@@ -49,6 +51,9 @@ class SupabaseService:
         return hashlib.sha256(password.encode()).hexdigest()
 
     def create_user(self, email, password, user_data):
+        print("SupabaseService.create_user called with email:", email)
+        print("SupabaseService.authenticate_user called with email:", email)
+
         try:
             client = self.get_client()
             if client is None:
@@ -98,6 +103,9 @@ class SupabaseService:
 
 
     def authenticate_user(self, email, password):
+        print("SupabaseService.create_user called with email:", email)
+        print("SupabaseService.authenticate_user called with email:", email)
+
         """Authenticate user using database only"""
         try:
             client = self.get_client()
