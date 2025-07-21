@@ -11,7 +11,6 @@ import json
 
 student_bp = Blueprint('student', __name__)
 
-
 @student_bp.route('/dashboard')
 @login_required
 @role_required('student')
@@ -30,7 +29,6 @@ def dashboard():
                            submissions=submissions,
                            available_projects=available_projects[:5],  # Show latest 5
                            total_points=current_user.points)
-
 
 @student_bp.route('/opportunities')
 @login_required
@@ -75,20 +73,33 @@ def opportunities():
 
         filtered_projects.append(project)
 
-    # Sort projects
+    # ---- SORT FIX STARTS HERE ----
+
+    def safe_created_at(project):
+        val = project.get('created_at')
+        if not val:
+            # Use earliest date for missing value (puts at end if reverse=True)
+            return datetime.min
+        try:
+            # Handles ISO date with or without Z, or with time zone
+            return datetime.fromisoformat(val.replace('Z', '+00:00'))
+        except Exception:
+            return datetime.min
+
     if sort_by == 'credits':
         filtered_projects.sort(key=lambda x: x.get('credits', 0), reverse=True)
     elif sort_by == 'title':
         filtered_projects.sort(key=lambda x: x.get('title', ''))
-    else:  # created_at
-        filtered_projects.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    else:  # created_at (default)
+        filtered_projects.sort(key=safe_created_at, reverse=True)
+
+    # ---- SORT FIX ENDS HERE ----
 
     return render_template('student/opportunities.html',
                            projects=filtered_projects,
                            search_query=search_query,
                            grade_filter=grade_filter,
                            sort_by=sort_by)
-
 
 @student_bp.route('/claim-project/<int:project_id>', methods=['POST'])
 @login_required
@@ -145,7 +156,6 @@ def claim_project(project_id):
         flash('An error occurred while claiming the project.', 'error')
 
     return redirect(url_for('student.opportunities'))
-
 
 @student_bp.route('/submit-project', methods=['GET', 'POST'])
 @login_required
@@ -264,7 +274,6 @@ def submit_project():
         flash('An error occurred while submitting the project.', 'error')
 
     return redirect(url_for('student.submit_project'))
-
 
 @student_bp.route('/my-submissions')
 @login_required
