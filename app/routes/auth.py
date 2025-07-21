@@ -41,7 +41,6 @@ def login():
     return render_template('auth/login.html')
 
 
-
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @anonymous_required
 def register():
@@ -72,25 +71,28 @@ def register():
             'role': role,
             'grade_level': grade_level if role == 'student' else None
         }
-
         try:
-            auth_user, profile_data = supabase_service.create_user(email, password, user_data)
+            auth_user, profile_data, error = supabase_service.create_user(email, password, user_data)
         except Exception as e:
             print("ERROR creating user:", e)
             flash(f"Registration error: {str(e)}", 'error')
+            return render_template('auth/register.html')
+
+        if error:
+            flash(f'Registration failed: {error}', 'error')
+            print("Registration error detail:", error)
             return render_template('auth/register.html')
 
         if auth_user and profile_data:
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('auth.login'))
         else:
-            flash('Registration failed. Possible duplicate, invalid fields, or backend problem.', 'error')
-            # Optionally: print more debug info
-            print("Registration returned:", auth_user, profile_data)
+            flash('Registration failed (unknown reason, see logs).', 'error')
+            print("Registration returned (should not occur):", auth_user, profile_data, error)
             return render_template('auth/register.html')
+    # <--- make sure this return is always present:
+    return render_template('auth/register.html')
 
-
-            return render_template('auth/register.html')
 
 @auth_bp.route('/logout')
 @login_required
