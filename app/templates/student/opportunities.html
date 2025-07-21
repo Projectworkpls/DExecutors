@@ -125,7 +125,6 @@
                         </small>
 
                         <form method="POST" action="{{ url_for('student.claim_project', project_id=project.id) }}" class="d-inline">
-                            {{ csrf_token() }}
                             <button type="submit" class="btn btn-primary btn-sm">
                                 <i class="fas fa-hand-paper me-1"></i>
                                 Claim Project

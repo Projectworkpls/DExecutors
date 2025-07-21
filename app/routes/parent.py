@@ -15,13 +15,25 @@ def dashboard():
     try:
         # Get parent's projects
         projects = current_app.supabase_service.get_projects_by_parent(current_user.id)
+        # Print all project IDs and statuses for debugging!
+        if projects:
+            print("[PARENT DASHBOARD] Projects fetched:", [(p.get('id'), p.get('status')) for p in projects])
+        else:
+            print("[PARENT DASHBOARD] No projects found for parent", current_user.id)
+
         project_objects = [Project.from_dict(p) for p in projects] if projects else []
 
-        # Categorize projects by status
-        pending_projects = [p for p in project_objects if p.status == 'pending']
-        approved_projects = [p for p in project_objects if p.status == 'approved']
-        in_progress_projects = [p for p in project_objects if p.status in ['claimed', 'in_progress']]
-        completed_projects = [p for p in project_objects if p.status == 'completed']
+        # Categorize projects by status: use .strip().lower()
+        pending_projects = [p for p in project_objects if p.status and p.status.strip().lower() == 'pending']
+        approved_projects = [p for p in project_objects if p.status and p.status.strip().lower() == 'approved']
+        in_progress_projects = [p for p in project_objects if p.status and p.status.strip().lower() in ['claimed', 'in_progress']]
+        completed_projects = [p for p in project_objects if p.status and p.status.strip().lower() == 'completed']
+
+        # Print categorized counts
+        print("[PARENT DASHBOARD] Counts -> Pending:", len(pending_projects), 
+              "Approved:", len(approved_projects), 
+              "In progress:", len(in_progress_projects), 
+              "Completed:", len(completed_projects))
 
         return render_template('parent/dashboard.html',
                                pending_projects=pending_projects,
@@ -36,6 +48,7 @@ def dashboard():
                                approved_projects=[],
                                in_progress_projects=[],
                                completed_projects=[])
+
 
 
 @parent_bp.route('/post-idea', methods=['GET', 'POST'])

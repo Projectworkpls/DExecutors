@@ -61,7 +61,10 @@ def approve_project(project_id):
             'approved_by': current_user.id,
             'admin_notes': admin_notes
         })
-
+        print(f"[ADMIN] Attempted to approve project {project_id}. Update result: {result}")
+        # If possible, directly query project after approving
+        project_after = current_app.supabase_service.get_client().table('projects').select('*').eq('id', project_id).execute()
+        print(f"[ADMIN] Project {project_id} after approval: {project_after.data[0] if project_after.data else 'None found'}")
         if result:
             flash('Project approved successfully!', 'success')
         else:
@@ -73,13 +76,14 @@ def approve_project(project_id):
             'rejected_by': current_user.id,
             'admin_notes': admin_notes
         })
-
+        print(f"[ADMIN] Attempted to reject project {project_id}. Update result: {result}")
         if result:
             flash('Project rejected.', 'info')
         else:
             flash('Failed to reject project.', 'error')
 
     return redirect(url_for('admin.approve_ideas'))
+
 
 
 @admin_bp.route('/approve-submissions')
