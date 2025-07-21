@@ -3,9 +3,15 @@ from flask_login import LoginManager
 from app.config import Config
 import os
 from flask import render_template
+import json   # <-- ADD THIS
 
 login_manager = LoginManager()
 
+def from_json_filter(value):   # <-- ADD THIS FUNCTION
+    try:
+        return json.loads(value)
+    except Exception:
+        return {}
 
 def create_app():
     app = Flask(__name__)
@@ -37,6 +43,9 @@ def create_app():
     app.gemini_service = gemini_service
     app.notification_service = notification_service
 
+    # Register custom Jinja filter !!!!
+    app.jinja_env.filters['from_json'] = from_json_filter
+
     # Register blueprints
     from app.routes.auth import auth_bp
     from app.routes.parent import parent_bp
@@ -51,12 +60,10 @@ def create_app():
     app.register_blueprint(ideas_bp)
 
     # Main route
-
     @app.route('/')
     def index():
         projects = app.supabase_service.get_projects_by_status('approved')
         return render_template('index.html', ideas=projects[:6])  # Show latest 6 ideas on homepage
-
 
     # Favicon route - return empty response to prevent 404s
     @app.route('/favicon.ico')
@@ -68,7 +75,6 @@ def create_app():
     def uploaded_file(filename):
         upload_dir = os.path.join(app.root_path, 'uploads')
         return send_from_directory(upload_dir, filename)
-
 
     # Simple error handlers that don't rely on templates
     @app.errorhandler(404)
@@ -100,7 +106,6 @@ def create_app():
         ''', 500
 
     return app
-
 
 @login_manager.user_loader
 def load_user(user_id):
