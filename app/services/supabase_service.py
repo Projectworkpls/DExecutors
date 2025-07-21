@@ -188,10 +188,16 @@ class SupabaseService:
             return []
 
     def update_project_status(self, project_id, status, additional_data=None):
-        """Update project status"""
+        """Update project status, using service role if available"""
         try:
-            client = self.get_client()
+            # Try to use the service key, fall back to normal API key (for admin rights)
+            service_key = current_app.config.get('SUPABASE_SERVICE_KEY')
+            if service_key:
+                client = create_client(self._url, service_key)
+            else:
+                client = self.get_client()
             if client is None:
+                print("Client is None in update_project_status")
                 return None
 
             update_data = {"status": status}
@@ -199,10 +205,13 @@ class SupabaseService:
                 update_data.update(additional_data)
 
             response = client.table('projects').update(update_data).eq('id', project_id).execute()
+            print("[SUPABASE UPDATE DEBUG] Update status response.data:", response.data)
+            print("[SUPABASE UPDATE DEBUG] Update status error:", getattr(response, "error", None))
             return response.data[0] if response.data else None
         except Exception as e:
             print(f"Error updating project: {e}")
             return None
+
 
     # Submission operations
     def create_submission(self, submission_data):
