@@ -49,7 +49,6 @@ class SupabaseService:
         return hashlib.sha256(password.encode()).hexdigest()
 
     def create_user(self, email, password, user_data):
-        """Create user directly in database - bypass Supabase auth completely"""
         try:
             client = self.get_client()
             if client is None:
@@ -58,13 +57,8 @@ class SupabaseService:
 
             print(f"Creating user directly in database: {email}")
 
-            # Generate a UUID for the user
             user_id = str(uuid.uuid4())
-
-            # Hash the password
             password_hash = self.hash_password(password)
-
-            # Create user profile directly in database using service role
             user_profile = {
                 "id": user_id,
                 "email": email,
@@ -76,30 +70,32 @@ class SupabaseService:
                 "created_at": datetime.utcnow().isoformat()
             }
 
-            # Use service role client to bypass RLS
             service_client = create_client(self._url, self._key)
-
-            # Insert directly using service role
             response = service_client.table('users').insert(user_profile).execute()
+
+            # PRINT FULL RESPONSE FOR DEBUG
+            print("Supabase create_user response:", response.__dict__)
+
+            if getattr(response, 'error', None):
+                print("Supabase insertion error:", response.error)
+                return None, None
 
             if response.data:
                 print(f"User created successfully in database: {user_id}")
-
-                # Create a mock user object
                 class MockUser:
                     def __init__(self, user_id, email):
                         self.id = user_id
                         self.email = email
-
                 mock_user = MockUser(user_id, email)
                 return mock_user, response.data
             else:
-                print("Failed to create user in database")
+                print("Failed to create user in database (no data, no error)")
                 return None, None
 
         except Exception as e:
             print(f"Error creating user: {e}")
             return None, None
+
 
     def authenticate_user(self, email, password):
         """Authenticate user using database only"""

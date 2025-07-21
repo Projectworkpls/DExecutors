@@ -41,6 +41,7 @@ def login():
     return render_template('auth/login.html')
 
 
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @anonymous_required
 def register():
@@ -52,7 +53,7 @@ def register():
         role = request.form.get('role')
         grade_level = request.form.get('grade_level')
 
-        # Basic validation (NO EMAIL FORMAT CHECKING)
+        # Basic validation
         if not all([email, password, confirm_password, full_name, role]):
             flash('Please fill in all required fields.', 'error')
             return render_template('auth/register.html')
@@ -65,7 +66,6 @@ def register():
             flash('Password must be at least 6 characters long.', 'error')
             return render_template('auth/register.html')
 
-        # Create user using app context service
         supabase_service = current_app.supabase_service
         user_data = {
             'full_name': full_name,
@@ -73,16 +73,23 @@ def register():
             'grade_level': grade_level if role == 'student' else None
         }
 
-        auth_user, profile_data = supabase_service.create_user(email, password, user_data)
+        try:
+            auth_user, profile_data = supabase_service.create_user(email, password, user_data)
+        except Exception as e:
+            print("ERROR creating user:", e)
+            flash(f"Registration error: {str(e)}", 'error')
+            return render_template('auth/register.html')
 
         if auth_user and profile_data:
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('auth.login'))
         else:
-            flash('Registration failed. Please try again.', 'error')
+            flash('Registration failed. Possible duplicate, invalid fields, or backend problem.', 'error')
+            # Optionally: print more debug info
+            print("Registration returned:", auth_user, profile_data)
+            return render_template('auth/register.html')
 
     return render_template('auth/register.html')
-
 
 @auth_bp.route('/logout')
 @login_required
