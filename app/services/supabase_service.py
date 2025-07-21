@@ -52,15 +52,11 @@ class SupabaseService:
 
     def create_user(self, email, password, user_data):
         print("SupabaseService.create_user called with email:", email)
-        print("SupabaseService.authenticate_user called with email:", email)
-
         try:
             client = self.get_client()
             if client is None:
                 print("Error: Supabase client is None")
-                return None, None
-
-            print(f"Creating user directly in database: {email}")
+                return None, None, "Client is None"
 
             user_id = str(uuid.uuid4())
             password_hash = self.hash_password(password)
@@ -77,13 +73,11 @@ class SupabaseService:
 
             service_client = create_client(self._url, self._key)
             response = service_client.table('users').insert(user_profile).execute()
-
-            # PRINT FULL RESPONSE FOR DEBUG
             print("Supabase create_user response:", response.__dict__)
 
             if getattr(response, 'error', None):
                 print("Supabase insertion error:", response.error)
-                return None, None
+                return None, None, response.error
 
             if response.data:
                 print(f"User created successfully in database: {user_id}")
@@ -92,14 +86,14 @@ class SupabaseService:
                         self.id = user_id
                         self.email = email
                 mock_user = MockUser(user_id, email)
-                return mock_user, response.data
+                return mock_user, response.data, None
             else:
                 print("Failed to create user in database (no data, no error)")
-                return None, None
-
+                return None, None, "No data, no error"
         except Exception as e:
             print(f"Error creating user: {e}")
-            return None, None
+            return None, None, str(e)
+
 
 
     def authenticate_user(self, email, password):

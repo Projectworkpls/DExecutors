@@ -89,7 +89,8 @@ def register():
             print("Registration returned:", auth_user, profile_data)
             return render_template('auth/register.html')
 
-    return render_template('auth/register.html')
+
+            return render_template('auth/register.html')
 
 @auth_bp.route('/logout')
 @login_required
