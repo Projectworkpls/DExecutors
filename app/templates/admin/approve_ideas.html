@@ -48,7 +48,7 @@
                     {% if project.ai_evaluation %}
                         {% set ai_eval = project.ai_evaluation if project.ai_evaluation is mapping else (project.ai_evaluation | from_json) %}
                         {% if ai_eval %}
-                        <div class="alert alert-info">
+                        <div class="bg-info bg-opacity-10 border-start border-info p-2 mb-2 rounded">
                             <h6 class="alert-heading">
                                 <i class="fas fa-robot me-2"></i>
                                 AI Evaluation Results
@@ -96,6 +96,16 @@
                             {% endif %}
                         </div>
                         {% endif %}
+                    {% endif %}
+
+                    <!-- Show AI Prompt (if present) -->
+                    {% if project.creation_prompt %}
+                    <div class="bg-light border p-2 mb-2 rounded">
+                        <details class="mb-2">
+                            <summary><strong>Show AI Prompt</strong></summary>
+                            <pre class="bg-white p-2 rounded border" style="white-space: pre-wrap;">{{ project.creation_prompt }}</pre>
+                        </details>
+                    </div>
                     {% endif %}
                     
                     <!-- Approval Form -->
