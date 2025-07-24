@@ -79,42 +79,58 @@
                     {% if project.ai_evaluation %}
                         {% set ai_eval = project.ai_evaluation if project.ai_evaluation is mapping else (project.ai_evaluation | from_json) %}
                         {% if ai_eval %}
-                        <div class="mb-3">
-                            <div class="row g-2">
-                                {% if ai_eval.get('age_appropriateness', {}).get('recommended_age_range') %}
-                                <div class="col-6">
-                                    <small class="text-muted">
-                                        <i class="fas fa-users me-1"></i>
-                                        Age: {{ ai_eval.age_appropriateness.recommended_age_range }}
-                                    </small>
-                                </div>
-                                {% endif %}
-                                {% if ai_eval.get('feasibility', {}).get('estimated_time_hours') %}
-                                <div class="col-6">
-                                    <small class="text-muted">
-                                        <i class="fas fa-clock me-1"></i>
-                                        ~{{ ai_eval.feasibility.estimated_time_hours }}h
-                                    </small>
-                                </div>
-                                {% endif %}
-                                {% if ai_eval.get('feasibility', {}).get('difficulty_level') %}
-                                <div class="col-6">
-                                    <small class="text-muted">
-                                        <i class="fas fa-signal me-1"></i>
-                                        {{ ai_eval.feasibility.difficulty_level.title() }}
-                                    </small>
-                                </div>
-                                {% endif %}
-                                {% if ai_eval.get('age_appropriateness', {}).get('complexity_score') %}
-                                <div class="col-6">
-                                    <small class="text-muted">
-                                        <i class="fas fa-star me-1"></i>
-                                        {{ ai_eval.age_appropriateness.complexity_score }}/10
-                                    </small>
-                                </div>
-                                {% endif %}
+
+                            {% if ai_eval.get('problem_statement') %}
+                            <div class="mb-2">
+                                <strong>Problem Statement:</strong>
+                                <p class="text-secondary mb-0">{{ ai_eval['problem_statement'] }}</p>
                             </div>
-                        </div>
+                            {% endif %}
+
+                            {% if ai_eval.get('solution_overview') %}
+                            <div class="mb-3">
+                                <strong>Solution Overview:</strong>
+                                <p class="text-secondary mb-0">{{ ai_eval['solution_overview'] }}</p>
+                            </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <div class="row g-2">
+                                    {% if ai_eval.get('age_appropriateness', {}).get('recommended_age_range') %}
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-users me-1"></i>
+                                            Age: {{ ai_eval.age_appropriateness.recommended_age_range }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                    {% if ai_eval.get('feasibility', {}).get('estimated_time_hours') %}
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            ~{{ ai_eval.feasibility.estimated_time_hours }}h
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                    {% if ai_eval.get('feasibility', {}).get('difficulty_level') %}
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-signal me-1"></i>
+                                            {{ ai_eval.feasibility.difficulty_level.title() }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                    {% if ai_eval.get('age_appropriateness', {}).get('complexity_score') %}
+                                    <div class="col-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-star me-1"></i>
+                                            {{ ai_eval.age_appropriateness.complexity_score }}/10
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
                         {% endif %}
                     {% endif %}
 

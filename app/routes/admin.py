@@ -8,7 +8,6 @@ import json
 
 admin_bp = Blueprint('admin', __name__)
 
-
 @admin_bp.route('/dashboard')
 @login_required
 @role_required('admin')
@@ -16,6 +15,7 @@ def dashboard():
     pending_projects = current_app.supabase_service.get_projects_by_status('pending')
     pending_submissions = current_app.supabase_service.get_pending_submissions()
 
+    # Parse submitted_at as datetime objects where needed
     for submission in pending_submissions:
         if submission.get('submitted_at') and isinstance(submission['submitted_at'], str):
             try:
@@ -45,7 +45,13 @@ def approve_ideas():
     pending_projects = current_app.supabase_service.get_projects_by_status('pending')
     project_objects = [Project.from_dict(p) for p in pending_projects]
 
+    # Debug print AI evaluation problem statements
+    for p in project_objects:
+        ai_eval = p.ai_evaluation or {}
+        print(f"Project {p.title} - Problem Statement: {ai_eval.get('problem_statement', 'None')}")
+
     return render_template('admin/approve_ideas.html', projects=project_objects)
+
 
 
 @admin_bp.route('/approve-project/<int:project_id>', methods=['POST'])
@@ -54,6 +60,7 @@ def approve_ideas():
 def approve_project(project_id):
     action = request.form.get('action')  # approve or reject
     admin_notes = request.form.get('admin_notes', '')
+    rejection_reason = request.form.get('rejection_reason', '').strip() or admin_notes
 
     if action == 'approve':
         result = current_app.supabase_service.update_project_status(project_id, 'approved', {
@@ -62,28 +69,30 @@ def approve_project(project_id):
             'admin_notes': admin_notes
         })
         print(f"[ADMIN] Attempted to approve project {project_id}. Update result: {result}")
-        # If possible, directly query project after approving
+
         project_after = current_app.supabase_service.get_client().table('projects').select('*').eq('id', project_id).execute()
         print(f"[ADMIN] Project {project_id} after approval: {project_after.data[0] if project_after.data else 'None found'}")
+
         if result:
             flash('Project approved successfully!', 'success')
         else:
             flash('Failed to approve project.', 'error')
 
     elif action == 'reject':
-        result = current_app.supabase_service.update_project_status(project_id, 'rejected', {
+        update_data = {
             'rejected_at': datetime.utcnow().isoformat(),
             'rejected_by': current_user.id,
-            'admin_notes': admin_notes
-        })
+            'admin_notes': admin_notes,
+            'rejection_reason': rejection_reason
+        }
+        result = current_app.supabase_service.get_client().table('projects').update(update_data).eq('id', project_id).execute()
         print(f"[ADMIN] Attempted to reject project {project_id}. Update result: {result}")
-        if result:
+        if result.data:
             flash('Project rejected.', 'info')
         else:
             flash('Failed to reject project.', 'error')
 
     return redirect(url_for('admin.approve_ideas'))
-
 
 
 @admin_bp.route('/approve-submissions')
@@ -101,6 +110,7 @@ def approve_submissions():
 
     return render_template('admin/approve_submissions.html', submissions=pending_submissions)
 
+
 @admin_bp.route('/approve-submission/<int:submission_id>', methods=['POST'])
 @login_required
 @role_required('admin')
@@ -110,7 +120,6 @@ def approve_submission(submission_id):
     points_awarded = int(request.form.get('points_awarded', 0))
 
     try:
-        # -- Fetch submission with related project data
         submission_response = current_app.supabase_service.get_client().table('submissions') \
             .select('*, projects(*)') \
             .eq('id', submission_id).execute()
@@ -122,22 +131,18 @@ def approve_submission(submission_id):
         submission_data = submission_response.data[0]
         project_data = submission_data.get('projects', {})
 
-        # ========= APPROVE =========
         if action == 'approve':
             result = current_app.supabase_service.update_submission_status(
                 submission_id, 'approved', admin_feedback
             )
 
             if result:
-                # -- Mark project completed
                 current_app.supabase_service.update_project_status(project_data['id'], 'completed')
 
-                # -- Reward points to student
                 user_response = current_app.supabase_service.get_client().table('users') \
                     .select('points') \
                     .eq('id', submission_data['student_id']) \
                     .execute()
-
                 current_points = user_response.data[0]['points'] if user_response.data else 0
                 new_points = current_points + points_awarded
 
@@ -146,7 +151,6 @@ def approve_submission(submission_id):
                     .eq('id', submission_data['student_id']) \
                     .execute()
 
-                # -- Log awarded points
                 current_app.supabase_service.get_client().table('submissions') \
                     .update({'points_awarded': points_awarded}) \
                     .eq('id', submission_id) \
@@ -156,29 +160,29 @@ def approve_submission(submission_id):
             else:
                 flash('Failed to approve submission.', 'error')
 
-        # ========= REJECT =========
         elif action == 'reject':
             print(f"👉 Rejecting submission {submission_id}")
 
             result = current_app.supabase_service.update_submission_status(
-                submission_id, 'resubmission_required', admin_feedback
+                submission_id, 'rejected', admin_feedback
             )
-
             print("🔥 update_submission_status result:", result)
 
             if result:
-                flash('Submission rejected and sent back to student for resubmission.', 'info')
+                current_app.supabase_service.update_project_status(project_data['id'], 'approved', {
+                    'claimed_by': None,
+                    'claimed_at': None
+                })
+                flash('Submission rejected. Project is now available for other students.', 'info')
             else:
                 flash('Failed to reject submission.', 'error')
 
-        # ========= REQUEST REVISION =========
         elif action == 'request_revision':
             print(f"📝 Requesting revision for submission {submission_id}")
 
             result = current_app.supabase_service.update_submission_status(
                 submission_id, 'revision_requested', admin_feedback
             )
-
             print("🔥 update_submission_status result:", result)
 
             if result:
@@ -194,7 +198,6 @@ def approve_submission(submission_id):
         flash('An error occurred while processing the submission.', 'error')
 
     return redirect(url_for('admin.approve_submissions'))
-
 
 
 @admin_bp.route('/users')

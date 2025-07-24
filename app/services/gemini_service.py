@@ -5,6 +5,7 @@ import base64
 from PIL import Image
 import io
 import re
+from datetime import datetime
 
 class GeminiService:
     def __init__(self):
@@ -144,7 +145,6 @@ class GeminiService:
         """Continue the project evaluation conversation"""
 
         try:
-            # Get the chat session from memory
             if session_id not in self._chat_sessions:
                 return {
                     "success": False,
@@ -168,7 +168,6 @@ class GeminiService:
         """Generate final project evaluation report using structured prompting"""
 
         try:
-            # Get the chat session from memory
             if session_id not in self._chat_sessions:
                 return {
                     "success": False,
@@ -178,8 +177,14 @@ class GeminiService:
             chat_session = self._chat_sessions[session_id]
 
             finalization_prompt = """
-            Based on our conversation, please provide a comprehensive evaluation report. 
+            Based on our conversation, please provide a comprehensive evaluation report.
             Structure your response with clear sections and specific details:
+
+            PROBLEM STATEMENT:
+            - Briefly describe the core problem or challenge addressed by this project.
+
+            SOLUTION OVERVIEW:
+            - Summarize what students will do or create as part of this project.
 
             AGE APPROPRIATENESS:
             - Recommended age range: [specify range]
@@ -220,8 +225,14 @@ class GeminiService:
             response = chat_session.send_message(finalization_prompt)
             response_text = response.text
 
-            # Parse the structured response instead of JSON
+            # Debug print raw response
+            print("Gemini final evaluation raw response:\n", response_text)
+
+            # Parse the structured response
             evaluation_data = self._parse_structured_evaluation(response_text)
+
+            # Debug print parsed data
+            print("Parsed evaluation data:", evaluation_data)
 
             # Clean up the session from memory
             del self._chat_sessions[session_id]
@@ -242,8 +253,10 @@ class GeminiService:
     def _parse_structured_evaluation(self, response_text):
         """Parse structured text response into evaluation data"""
 
-        # Default structure
+        # Default structure with new fields for problem and solution overview
         evaluation_data = {
+            "problem_statement": "Write the problem or challenge",
+            "solution_overview": "Write the solution that students will perform.",
             "age_appropriateness": {
                 "recommended_age_range": "8-12 years",
                 "grade_levels": ["grade3", "grade4", "grade5"],
@@ -276,6 +289,16 @@ class GeminiService:
         }
 
         try:
+            # Extract problem statement (multiline)
+            problem_match = re.search(r'problem statement:\s*([\s\S]+?)(?:\n{2,}|$)', response_text, re.IGNORECASE)
+            if problem_match:
+                evaluation_data["problem_statement"] = problem_match.group(1).strip()
+
+            solution_match = re.search(r'solution overview:\s*([\s\S]+?)(?:\n{2,}|$)', response_text, re.IGNORECASE)
+            if solution_match:
+                evaluation_data["solution_overview"] = solution_match.group(1).strip()
+
+
             # Extract age range
             age_match = re.search(r'age range:\s*([^\n]+)', response_text, re.IGNORECASE)
             if age_match:
@@ -304,7 +327,6 @@ class GeminiService:
             # Extract credits
             min_credits_match = re.search(r'minimum credits:\s*(\d+)', response_text, re.IGNORECASE)
             max_credits_match = re.search(r'maximum credits:\s*(\d+)', response_text, re.IGNORECASE)
-
             if min_credits_match:
                 evaluation_data["recommended_credits"]["min_credits"] = int(min_credits_match.group(1))
             if max_credits_match:

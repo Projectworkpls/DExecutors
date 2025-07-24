@@ -71,7 +71,40 @@ def opportunities():
             if grade_filter not in grade_levels:
                 continue
 
+        # Ensure ai_evaluation is a dict before sending to template
+        ai_eval = project.get('ai_evaluation', {})
+        if isinstance(ai_eval, str):
+            try:
+                ai_eval = json.loads(ai_eval)
+            except:
+                ai_eval = {}
+        project['ai_evaluation'] = ai_eval
+
         filtered_projects.append(project)
+
+    # Sorting logic remains unchanged
+    def safe_created_at(project):
+        val = project.get('created_at')
+        if not val:
+            return datetime.min
+        try:
+            return datetime.fromisoformat(val.replace('Z', '+00:00'))
+        except Exception:
+            return datetime.min
+
+    if sort_by == 'credits':
+        filtered_projects.sort(key=lambda x: x.get('credits', 0), reverse=True)
+    elif sort_by == 'title':
+        filtered_projects.sort(key=lambda x: x.get('title', ''))
+    else:  # created_at (default)
+        filtered_projects.sort(key=safe_created_at, reverse=True)
+
+    return render_template('student/opportunities.html',
+                           projects=filtered_projects,
+                           search_query=search_query,
+                           grade_filter=grade_filter,
+                           sort_by=sort_by)
+
 
     # ---- SORT FIX STARTS HERE ----
 
