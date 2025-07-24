@@ -106,6 +106,14 @@
                     <i class="fas fa-trophy me-2"></i>Completed
                 </button>
             </li>
+            <!-- Add this tab to your existing tabs -->
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" 
+                        type="button" role="tab">
+                    <i class="fas fa-times-circle me-2 text-danger"></i>
+                    Rejected ({{ rejected_projects|length }})
+                </button>
+            </li>
         </ul>
     </div>
     <div class="card-body">
@@ -238,6 +246,54 @@
                         <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">No completed projects</h5>
                         <p class="text-muted">Successfully completed projects will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <!-- Add this tab content -->
+            <div class="tab-pane fade" id="rejected" role="tabpanel">
+                {% if rejected_projects %}
+                    <div class="row">
+                        {% for project in rejected_projects %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">{{ project.title }}</h6>
+                                    <small><i class="fas fa-calendar me-1"></i>Rejected on {{ project.rejected_at.strftime('%B %d, %Y') if project.rejected_at else 'Recently' }}</small>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                                    
+                                    {% if project.rejection_reason %}
+                                    <div class="alert alert-danger">
+                                        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-1"></i>Rejection Reason:</h6>
+                                        <p class="mb-0 small">{{ project.rejection_reason }}</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if project.admin_notes %}
+                                    <div class="alert alert-info">
+                                        <h6 class="alert-heading"><i class="fas fa-info-circle me-1"></i>Admin Notes:</h6>
+                                        <p class="mb-0 small">{{ project.admin_notes }}</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">{{ project.credits }} credits</small>
+                                        <a href="{{ url_for('parent.resubmit_project', project_id=project.id) }}" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit me-1"></i>Revise & Resubmit
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5 class="text-muted">No rejected projects</h5>
+                        <p class="text-muted">All your submitted projects have been approved or are under review.</p>
                     </div>
                 {% endif %}
             </div>
