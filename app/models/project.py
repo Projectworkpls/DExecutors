@@ -40,7 +40,9 @@ class Project:
         approved_by=None,
         claimed_at=None,
         updated_at=None,
-        suggested_credits=None
+        suggested_credits=None,
+        project_overview=None,
+        solution_overview=None
     ):
         self.id = id
         self.title = title
@@ -61,6 +63,8 @@ class Project:
         self.claimed_at = claimed_at
         self.updated_at = updated_at
         self.suggested_credits = suggested_credits
+        self.project_overview = project_overview
+        self.solution_overview = solution_overview
 
     def to_dict(self):
         return {
@@ -82,7 +86,9 @@ class Project:
             'approved_by': self.approved_by,
             'claimed_at': self.claimed_at.isoformat() if isinstance(self.claimed_at, datetime) else self.claimed_at,
             'updated_at': self.updated_at.isoformat() if isinstance(self.updated_at, datetime) else self.updated_at,
-            'suggested_credits': self.suggested_credits
+            'suggested_credits': self.suggested_credits,
+            'project_overview': self.project_overview,
+            'solution_overview': self.solution_overview
         }
 
     @staticmethod
@@ -99,6 +105,8 @@ class Project:
         project.admin_notes = data.get('admin_notes')
         project.approved_by = data.get('approved_by')
         project.suggested_credits = data.get('suggested_credits')
+        project.project_overview = data.get('project_overview')
+        project.solution_overview = data.get('solution_overview')
 
         # Parse JSON fields
         eval_params = data.get('evaluation_parameters')

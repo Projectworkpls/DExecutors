@@ -289,14 +289,22 @@ class GeminiService:
         }
 
         try:
-            # Extract problem statement (multiline)
-            problem_match = re.search(r'problem statement:\s*([\s\S]+?)(?:\n{2,}|$)', response_text, re.IGNORECASE)
-            if problem_match:
-                evaluation_data["problem_statement"] = problem_match.group(1).strip()
+            # Helper to extract full section content
+            def extract_section(section_name):
+                # Match headers like "**PROBLEM STATEMENT:**", "## PROBLEM STATEMENT", etc., followed by any number of blank lines
+                pattern = rf"(?:\*\*|##|#)?\s*{section_name}\s*:?\*?\*?\s*\n+([\s\S]+?)(?=\n(?:\*\*|##|#)?\s*[A-Z][A-Z _]+:?(\*\*)?\s*\n|\Z)"
+                match = re.search(pattern, response_text, re.IGNORECASE)
+                if match:
+                    content = match.group(1).strip()
+                    # Remove leading markdown bullets and asterisks from each line
+                    content = re.sub(r"^\*+\s*", "", content, flags=re.MULTILINE)
+                    # Remove bolding from "**Core Problem:**" etc.
+                    content = re.sub(r"\*\*(.*?)\*\*", r"\\1", content)
+                    return content.strip()
+                return ""
 
-            solution_match = re.search(r'solution overview:\s*([\s\S]+?)(?:\n{2,}|$)', response_text, re.IGNORECASE)
-            if solution_match:
-                evaluation_data["solution_overview"] = solution_match.group(1).strip()
+            evaluation_data["problem_statement"] = extract_section("PROBLEM STATEMENT")
+            evaluation_data["solution_overview"] = extract_section("SOLUTION OVERVIEW")
 
 
             # Extract age range

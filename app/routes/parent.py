@@ -183,7 +183,9 @@ def finalize_evaluation():
                 'ai_evaluation': evaluation_result['evaluation'],
                 'evaluation_parameters': ai_evaluation.get('evaluation_parameters', {}),
                 'submission_format': submission_format,
-                'created_at': None
+                'created_at': None,
+                'project_overview': ai_evaluation.get('problem_statement', ''),
+                'solution_overview': ai_evaluation.get('solution_overview', '')
             })
 
             project_data.pop('suggested_credits', None)

@@ -104,6 +104,14 @@
                     <div class="border-bottom pb-3 mb-3">
                         <h6 class="fw-bold">{{ project.title }}</h6>
                         <p class="text-muted small mb-2">{{ project.description[:100] }}...</p>
+                        <div class="mb-2">
+                          <strong>Project Overview:</strong>
+                          <span>{{ project.project_overview if project.project_overview else 'No overview available.' }}</span>
+                        </div>
+                        <div class="mb-2">
+                          <strong>Solution Overview:</strong>
+                          <span>{{ project.solution_overview if project.solution_overview else 'No solution overview available.' }}</span>
+                        </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="badge bg-success">{{ project.credits }} Credits</span>
                             <form method="POST" action="{{ url_for('student.claim_project', project_id=project.id) }}" class="d-inline">
