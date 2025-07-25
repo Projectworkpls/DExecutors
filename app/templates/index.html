@@ -718,22 +718,47 @@
       </div>
     </div>
   </section>
-  <section id="projects-section" class="section">
+<section id="projects-section" class="section">
   <div class="section-title">Student Projects</div>
   <div class="ideas-grid" id="projectsGrid">
     {% if projectsVisible %}
-      {% for project in projectsVisible %}
+      {% for submission in projectsVisible %}
         <div class="idea-card">
-          <h4>{{ project.title }}</h4>
-          <p>{{ project.description[:120] ~ ('...' if project.description|length > 120 else '') }}</p>
-          <div class="credits">Credits: {{ project.credits }}</div>
+          <h4>{{ submission.projects.title }}</h4>
+
+          <p>{{ submission.description[:120] ~ ('...' if submission.description|length > 120 else '') }}</p>
+          
+          <div class="credits">Credits: {{ submission.projects.credits }}</div>
+
+          {% if submission.file_url %}
+            <div class="submission-media mt-2">
+              {% if submission.submission_type == 'video' %}
+                <video controls width="100%" style="max-height: 200px;" class="rounded">
+                  <source src="{{ submission.file_url }}" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              {% elif submission.submission_type == 'image' %}
+                <img src="{{ submission.file_url }}" alt="Submission Image" class="img-fluid rounded" />
+              {% elif submission.submission_type == 'url' %}
+                <a href="{{ submission.file_url }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm mt-1">
+                  View Project Link
+                </a>
+              {% else %}
+                <a href="{{ submission.file_url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm mt-1">
+                  View Submission
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
         </div>
       {% endfor %}
     {% else %}
       <p>No projects available at this time.</p>
     {% endif %}
   </div>
- </section>
+</section>
+
+
 
   <section id="what-our-users-say" class="section">
     <div class="section-title">What Our Users Say</div>

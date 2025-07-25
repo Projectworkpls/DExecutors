@@ -4,6 +4,8 @@ from app.config import Config
 import os
 import json
 
+
+
 login_manager = LoginManager()
 
 
@@ -64,13 +66,22 @@ def create_app():
     # Main route - landing page
     @app.route('/')
     def index():
-    # Fetch projects marked visible by admin
-        projects_response = current_app.supabase_service.get_client().table('projects') \
-        .select('*').eq('show_on_landing_page', True).execute()
+    # Fetch all approved submissions with related project info
+        submissions_response = current_app.supabase_service.get_client().table('submissions') \
+            .select('*, projects(*)') \
+            .eq('status', 'approved') \
+            .execute()
 
-        projectsVisible = projects_response.data if projects_response.data else []
+        submissions = submissions_response.data or []
 
-        return render_template('index.html', projectsVisible=projectsVisible)
+        # Filter submissions whose projects are marked show_on_landing_page = True
+        visible_submissions = [s for s in submissions if s.get('projects') and s['projects'].get('show_on_landing_page')]
+
+        return render_template('index.html', projectsVisible=visible_submissions)
+
+        
+
+
 
 
     # Favicon route (prevent 404s)
