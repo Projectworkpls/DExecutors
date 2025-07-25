@@ -718,6 +718,22 @@
       </div>
     </div>
   </section>
+  <section id="projects-section" class="section">
+  <div class="section-title">Student Projects</div>
+  <div class="ideas-grid" id="projectsGrid">
+    {% if projectsVisible %}
+      {% for project in projectsVisible %}
+        <div class="idea-card">
+          <h4>{{ project.title }}</h4>
+          <p>{{ project.description[:120] ~ ('...' if project.description|length > 120 else '') }}</p>
+          <div class="credits">Credits: {{ project.credits }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No projects available at this time.</p>
+    {% endif %}
+  </div>
+ </section>
 
   <section id="what-our-users-say" class="section">
     <div class="section-title">What Our Users Say</div>

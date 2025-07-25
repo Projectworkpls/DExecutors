@@ -1,17 +1,19 @@
-from flask import Flask, redirect, url_for, send_from_directory, jsonify
+from flask import Flask, redirect, url_for, send_from_directory, jsonify, render_template , current_app
 from flask_login import LoginManager
 from app.config import Config
 import os
-from flask import render_template
-import json   # <-- ADD THIS
+import json
 
 login_manager = LoginManager()
 
-def from_json_filter(value):   # <-- ADD THIS FUNCTION
+
+def from_json_filter(value):
+    """Custom Jinja filter to safely parse JSON strings into dictionaries."""
     try:
         return json.loads(value)
     except Exception:
         return {}
+
 
 def create_app():
     app = Flask(__name__)
@@ -43,7 +45,7 @@ def create_app():
     app.gemini_service = gemini_service
     app.notification_service = notification_service
 
-    # Register custom Jinja filter !!!!
+    # Register custom Jinja filter
     app.jinja_env.filters['from_json'] = from_json_filter
 
     # Register blueprints
@@ -59,24 +61,31 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(ideas_bp)
 
-    # Main route
+    # Main route - landing page
     @app.route('/')
     def index():
-        projects = app.supabase_service.get_projects_by_status('approved')
-        return render_template('index.html', ideas=projects[:6])  # Show latest 6 ideas on homepage
+    # Fetch projects marked visible by admin
+        projects_response = current_app.supabase_service.get_client().table('projects') \
+        .select('*').eq('show_on_landing_page', True).execute()
 
-    # Favicon route - return empty response to prevent 404s
+        projectsVisible = projects_response.data if projects_response.data else []
+
+        return render_template('index.html', projectsVisible=projectsVisible)
+
+
+    # Favicon route (prevent 404s)
     @app.route('/favicon.ico')
     def favicon():
         return '', 204
 
-    # File upload route
+    # Serve uploaded files
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):
         upload_dir = os.path.join(app.root_path, 'uploads')
         return send_from_directory(upload_dir, filename)
 
-    # Simple error handlers that don't rely on templates
+    # Error handlers
+
     @app.errorhandler(404)
     def not_found_error(error):
         return '''
@@ -106,6 +115,7 @@ def create_app():
         ''', 500
 
     return app
+
 
 @login_manager.user_loader
 def load_user(user_id):

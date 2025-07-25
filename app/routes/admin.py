@@ -1,14 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from app.models.project import Project
 from app.models.submission import Submission
 from app.utils.decorators import role_required
 from datetime import datetime
 import json
-
+from httpx import ReadTimeout
 
 admin_bp = Blueprint('admin', __name__)
-
 
 @admin_bp.route('/dashboard')
 @login_required
@@ -34,10 +33,12 @@ def dashboard():
         'pending_approvals': len(pending_projects) + len(pending_submissions)
     }
 
-    return render_template('admin/dashboard.html',
-                           pending_projects=pending_projects,
-                           pending_submissions=pending_submissions,
-                           stats=stats)
+    return render_template(
+        'admin/dashboard.html',
+        pending_projects=pending_projects,
+        pending_submissions=pending_submissions,
+        stats=stats
+    )
 
 
 @admin_bp.route('/approve-ideas')
@@ -106,16 +107,22 @@ def approve_project(project_id):
 @login_required
 @role_required('admin')
 def approve_submissions():
-    pending_submissions = current_app.supabase_service.get_pending_submissions()
+    pending_submissions_resp = current_app.supabase_service.get_client().table('submissions') \
+        .select('*, projects(*), users(*)') \
+        .eq('status', 'pending') \
+        .execute()
+    pending_submissions = pending_submissions_resp.data or []
 
-    for submission in pending_submissions:
-        if submission.get('submitted_at') and isinstance(submission['submitted_at'], str):
+    # Parse datetime as needed
+    for sub in pending_submissions:
+        if sub.get('submitted_at') and isinstance(sub['submitted_at'], str):
             try:
-                submission['submitted_at'] = datetime.fromisoformat(submission['submitted_at'].replace('Z', '+00:00'))
+                sub['submitted_at'] = datetime.fromisoformat(sub['submitted_at'].replace('Z', '+00:00'))
             except Exception:
-                submission['submitted_at'] = None
+                sub['submitted_at'] = None
 
     return render_template('admin/approve_submissions.html', submissions=pending_submissions)
+
 
 
 @admin_bp.route('/approve-submission/<int:submission_id>', methods=['POST'])
@@ -127,6 +134,7 @@ def approve_submission(submission_id):
     points_awarded = int(request.form.get('points_awarded', 0))
 
     try:
+        # Fetch the submission along with its related project data
         submission_response = current_app.supabase_service.get_client().table('submissions') \
             .select('*, projects(*)') \
             .eq('id', submission_id).execute()
@@ -139,13 +147,18 @@ def approve_submission(submission_id):
         project_data = submission_data.get('projects', {})
 
         if action == 'approve':
+            # Update submission status to approved
             result = current_app.supabase_service.update_submission_status(
                 submission_id, 'approved', admin_feedback
             )
-
-            if result:
+            print("Approval result:", result)
+            if not result or getattr(result, 'error', None):
+                flash('Submission approved.', 'error')
+            else:
+                # Mark project as completed
                 current_app.supabase_service.update_project_status(project_data['id'], 'completed')
 
+                # Update user points
                 user_response = current_app.supabase_service.get_client().table('users') \
                     .select('points') \
                     .eq('id', submission_data['student_id']) \
@@ -158,14 +171,13 @@ def approve_submission(submission_id):
                     .eq('id', submission_data['student_id']) \
                     .execute()
 
+                # Update points awarded for this submission
                 current_app.supabase_service.get_client().table('submissions') \
                     .update({'points_awarded': points_awarded}) \
                     .eq('id', submission_id) \
                     .execute()
 
                 flash(f'Submission approved! {points_awarded} points awarded to student.', 'success')
-            else:
-                flash('Failed to approve submission.', 'error')
 
         elif action == 'reject':
             print(f"👉 Rejecting submission {submission_id}")
@@ -175,14 +187,15 @@ def approve_submission(submission_id):
             )
             print("🔥 update_submission_status result:", result)
 
-            if result:
+            if not result or getattr(result, 'error', None):
+                flash('Failed to reject submission.', 'error')
+            else:
+                # Reset project claim to approved and clear claimed_by and claimed_at
                 current_app.supabase_service.update_project_status(project_data['id'], 'approved', {
                     'claimed_by': None,
                     'claimed_at': None
                 })
                 flash('Submission rejected. Project is now available for other students.', 'info')
-            else:
-                flash('Failed to reject submission.', 'error')
 
         elif action == 'request_revision':
             print(f"📝 Requesting revision for submission {submission_id}")
@@ -192,10 +205,10 @@ def approve_submission(submission_id):
             )
             print("🔥 update_submission_status result:", result)
 
-            if result:
-                flash('Revision requested. Student will be notified.', 'info')
-            else:
+            if not result or getattr(result, 'error', None):
                 flash('Failed to request revision.', 'error')
+            else:
+                flash('Revision requested. Student will be notified.', 'info')
 
         else:
             flash('Invalid action.', 'warning')
@@ -205,6 +218,7 @@ def approve_submission(submission_id):
         flash('An error occurred while processing the submission.', 'error')
 
     return redirect(url_for('admin.approve_submissions'))
+
 
 
 @admin_bp.route('/users')
@@ -229,7 +243,8 @@ def manage_users():
 @role_required('admin')
 def analytics():
     try:
-        top_students = current_app.supabase_service.get_client().table('users').select('full_name, points').eq('role', 'student').order('points', desc=True).limit(10).execute()
+        top_students = current_app.supabase_service.get_client().table('users') \
+            .select('full_name, points').eq('role', 'student').order('points', desc=True).limit(10).execute()
 
         total_projects = current_app.supabase_service.get_client().table('projects').select('status').execute()
         project_stats = {}
@@ -250,3 +265,23 @@ def analytics():
     except Exception as e:
         flash('Error loading analytics data.', 'error')
         return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/toggle-project-visibility/<int:project_id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def toggle_project_visibility(project_id):
+    visible = request.form.get('visible') == 'true'
+    result = current_app.supabase_service.get_client().table('projects').update({
+        'show_on_landing_page': visible,
+        'updated_at': datetime.utcnow().isoformat()
+    }).eq('id', project_id).execute()
+
+    if not result or result.data is None:
+        flash('Failed to update project visibility.', 'error')
+    else:
+        flash('Project visibility updated successfully.', 'success')
+
+    return redirect(request.referrer or url_for('admin.approve_submissions'))
+
+

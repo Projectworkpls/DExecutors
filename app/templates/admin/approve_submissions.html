@@ -31,18 +31,19 @@
                         {{ submission.submitted_at.strftime('%B %d, %Y at %I:%M %p') if submission.submitted_at else 'Recently submitted' }}
                     </small>
                 </div>
+
                 <div class="card-body">
                     <!-- Student's Description -->
                     <div class="mb-3">
                         <h6>Student's Description:</h6>
                         <p class="text-muted">{{ submission.description or 'No description provided' }}</p>
                     </div>
-                    
+
                     <!-- Submission Type and File -->
                     <div class="mb-3">
                         <h6>Submission Type:</h6>
                         <span class="badge bg-info">{{ submission.submission_type.title() }}</span>
-                        
+
                         {% if submission.file_url %}
                         <div class="mt-2">
                             {% if submission.submission_type == 'image' %}
@@ -61,7 +62,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    
+
                     <!-- AI Evaluation Results -->
                     {% if submission.ai_evaluation %}
                         {% set ai_eval = submission.ai_evaluation if submission.ai_evaluation is mapping else (submission.ai_evaluation | from_json) %}
@@ -71,7 +72,7 @@
                                 <i class="fas fa-robot me-2"></i>
                                 AI Evaluation Results
                             </h6>
-                            
+
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <strong>Overall Score:</strong>
@@ -95,7 +96,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             {% if ai_eval.get('parameter_scores') %}
                             <div class="mb-3">
                                 <strong>Parameter Scores:</strong>
@@ -111,7 +112,7 @@
                                 </div>
                             </div>
                             {% endif %}
-                            
+
                             {% if ai_eval.get('feedback') %}
                             <div class="mb-3">
                                 <strong>AI Feedback:</strong>
@@ -134,7 +135,7 @@
                                 </div>
                             </div>
                             {% endif %}
-                            
+
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <strong>AI Recommendation:</strong>
@@ -147,6 +148,7 @@
                                         <span class="badge bg-warning">{{ recommendation.replace('_', ' ').title() }}</span>
                                     {% endif %}
                                 </div>
+
                                 {% if ai_eval.get('bonus_eligible') %}
                                 <div>
                                     <span class="badge bg-warning">
@@ -159,19 +161,23 @@
                         {% endif %}
                     {% endif %}
 
-                    <!-- Original Project Details (NO alert class, so it's persistent) -->
+
+                    <!-- Show Project on Landing Page Toggle Form -->
                     {% if submission.projects %}
                     <div class="bg-light border p-2 mb-2 rounded">
                         <h6>Original Project Requirements:</h6>
                         <p class="small mb-2">{{ submission.projects.description[:200] }}...</p>
+
                         {% if submission.projects.creation_prompt %}
                         <details class="mb-2">
                             <summary><strong>Show AI Prompt</strong></summary>
                             <pre class="bg-white p-2 rounded border" style="white-space: pre-wrap;">{{ submission.projects.creation_prompt }}</pre>
                         </details>
                         {% endif %}
+
                         <div class="d-flex justify-content-between">
                             <small class="text-muted">Credits: {{ submission.projects.credits }}</small>
+
                             {% if submission.projects.ai_evaluation %}
                                 {% set project_ai = submission.projects.ai_evaluation if submission.projects.ai_evaluation is mapping else (submission.projects.ai_evaluation | from_json) %}
                                 {% if project_ai and project_ai.get('feasibility', {}).get('difficulty_level') %}
@@ -180,7 +186,32 @@
                             {% endif %}
                         </div>
                     </div>
+
+                    <!-- Show Project on Landing Page Toggle Form WITHOUT ANOTHER IF -->
+                    <form method="POST" action="{{ url_for('admin.toggle_project_visibility', project_id=submission.projects.id) }}" class="mb-3" novalidate>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                name="visible"
+                                id="visibleCheckbox_{{ submission.id }}" 
+                                value="true"
+                                {% if submission.projects.show_on_landing_page %}checked{% endif %}
+                                onchange="this.form.submit()"
+                                aria-describedby="toggleHelp_{{ submission.id }}"
+                            >
+                            <label class="form-check-label" for="visibleCheckbox_{{ submission.id }}">
+                            Show Project on Landing Page
+                            </label>
+                        </div>
+                        <small id="toggleHelp_{{ submission.id }}" class="form-text text-muted">
+                            Toggle this to control whether the project appears on the public landing page.
+                        </small>
+                    </form>
+
                     {% endif %}
+
+
 
                     <!-- Admin Review Form -->
                     <form method="POST" action="{{ url_for('admin.approve_submission', submission_id=submission.id) }}">
@@ -208,16 +239,16 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="admin_feedback_{{ submission.id }}" class="form-label">Admin Feedback</label>
-                            <textarea class="form-control" id="admin_feedback_{{ submission.id }}" name="admin_feedback"
-                                      rows="3" placeholder="Provide feedback to the student..."></textarea>
-                        </div>
-                    </form>
-                </div>
+                        <label for="admin_feedback_{{ submission.id }}" class="form-label">Admin Feedback</label>
+                        <textarea class="form-control" id="admin_feedback_{{ submission.id }}" name="admin_feedback"
+                                  rows="3" placeholder="Provide feedback to the student..."></textarea>
+                    </div>
+                </form>
             </div>
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
+</div>
 {% else %}
     <div class="text-center py-5">
         <i class="fas fa-check-circle fa-4x text-success mb-4"></i>
