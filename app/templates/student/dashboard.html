@@ -227,23 +227,5 @@
                     <div class="col-md-6">
                         <h6>Recent Activity</h6>
                         {% if submissions %}
-                            {% for submission in submissions[:3] %}
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="small">{{ submission.projects.title if submission.projects else 'Project' }}</span>
-                                {% if submission.status == 'approved' %}
-                                    <span class="badge bg-success">+{{ submission.points_awarded }} pts</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ submission.status.title() }}</span>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted small">No recent activity</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
+                            {% for submission in submissions[
+                                
