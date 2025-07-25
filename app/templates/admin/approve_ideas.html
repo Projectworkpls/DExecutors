@@ -22,7 +22,7 @@
     <div class="row">
         {% for project in projects %}
         <div class="col-lg-6 mb-4">
-            <div class="card border-warning">
+            <div class="card border-warning h-100">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0">{{ project.title }}</h5>
                     <small>
@@ -30,7 +30,7 @@
                         Submitted by Parent • {{ project.created_at.strftime('%B %d, %Y') if project.created_at else 'Recently' }}
                     </small>
                 </div>
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     <p class="card-text">{{ project.description }}</p>
                     
                     <div class="row mb-3">
@@ -76,15 +76,13 @@
                             </div>
                             {% endif %}
 
-
                             <hr>
 
                             <div class="row g-3">
-
                                 {% if ai_eval.get('age_appropriateness') %}
                                 <div class="col-md-6">
                                     <strong>Age Appropriateness:</strong>
-                                    <ul class="list-unstyled small mt-1">
+                                    <ul class="list-unstyled small mt-1 mb-0">
                                         <li><i class="fas fa-users me-1"></i> Age Range: {{ ai_eval.age_appropriateness.get('recommended_age_range', 'N/A') }}</li>
                                         <li><i class="fas fa-signal me-1"></i> Complexity: {{ ai_eval.age_appropriateness.get('complexity_score', 'N/A') }}/10</li>
                                     </ul>
@@ -94,7 +92,7 @@
                                 {% if ai_eval.get('feasibility') %}
                                 <div class="col-md-6">
                                     <strong>Feasibility:</strong>
-                                    <ul class="list-unstyled small mt-1">
+                                    <ul class="list-unstyled small mt-1 mb-0">
                                         <li><i class="fas fa-clock me-1"></i> Time: ~{{ ai_eval.feasibility.get('estimated_time_hours', 'N/A') }} hours</li>
                                         <li><i class="fas fa-level-up-alt me-1"></i> Difficulty: {{ ai_eval.feasibility.get('difficulty_level', 'N/A')|title }}</li>
                                         <li><i class="fas fa-star me-1"></i> Score: {{ ai_eval.feasibility.get('feasibility_score', 'N/A') }}/10</li>
@@ -126,7 +124,7 @@
 
                     <!-- Show AI Prompt (if present) -->
                     {% if project.creation_prompt %}
-                    <div class="bg-light border p-2 mb-2 rounded">
+                    <div class="bg-light border p-2 mb-2 rounded mt-auto">
                         <details class="mb-2">
                             <summary><strong>Show AI Prompt</strong></summary>
                             <pre class="bg-white p-2 rounded border" style="white-space: pre-wrap;">{{ project.creation_prompt }}</pre>

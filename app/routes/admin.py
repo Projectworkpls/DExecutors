@@ -6,7 +6,9 @@ from app.utils.decorators import role_required
 from datetime import datetime
 import json
 
+
 admin_bp = Blueprint('admin', __name__)
+
 
 @admin_bp.route('/dashboard')
 @login_required
@@ -45,13 +47,18 @@ def approve_ideas():
     pending_projects = current_app.supabase_service.get_projects_by_status('pending')
     project_objects = [Project.from_dict(p) for p in pending_projects]
 
-    # Debug print AI evaluation problem statements
+    # Parse ai_evaluation JSON for each project to access problem_statement and solution_overview
     for p in project_objects:
-        ai_eval = p.ai_evaluation or {}
-        print(f"Project {p.title} - Problem Statement: {ai_eval.get('problem_statement', 'None')}")
+        if p.ai_evaluation and isinstance(p.ai_evaluation, str):
+            try:
+                p.ai_evaluation = json.loads(p.ai_evaluation)
+            except Exception:
+                p.ai_evaluation = {}
+
+        # Debug print to verify data availability
+        print(f"Project {p.title} - Problem Statement: {p.ai_evaluation.get('problem_statement', 'None')}")
 
     return render_template('admin/approve_ideas.html', projects=project_objects)
-
 
 
 @admin_bp.route('/approve-project/<int:project_id>', methods=['POST'])
